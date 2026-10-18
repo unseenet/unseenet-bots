@@ -1,0 +1,15 @@
+# System units for a dedicated user "bots" (as on unseenet-node3). For a user account, see ../unseenet-bots.service.
+[Unit]
+Description=Unseenet bots: post new content to their channels
+After=network-online.target unseenet-node.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bots
+Group=bots
+ExecStart=/home/bots/.venv/bin/unseenet-bots -c /home/bots/.config/unseenet-bots/bots.toml run
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/home/bots/.local/state/unseenet-bots
+PrivateTmp=yes
