@@ -1,0 +1,24 @@
+# Copy to bots.toml and fill in the groups and keys.
+#
+# Each bot posts with its own key, which the channel's owner makes a poster
+# (command palette: Make poster). Make one with:
+#   unseenet-bots new-key ~/.config/unseenet-bots/news.key
+
+[defaults]
+state_file = "~/.local/state/unseenet-bots/state.json"
+# nodes = ["xyz.onion"]        # default: Unseenet's list of known nodes
+
+[bots.news]
+source = "wikipedia-news"       # one post per story in Wikipedia's "In the news"
+group = "alt.news.wikipedia@<owner fingerprint>"
+from_name = "Wikipedia news (bot)"
+key_file = "~/.config/unseenet-bots/news.key"
+max_per_run = 5
+options = { lang = "en" }
+
+[bots.onthisday]
+source = "wikipedia-onthisday"  # one post a day
+group = "alt.history.onthisday@<owner fingerprint>"
+from_name = "On this day (bot)"
+key_file = "~/.config/unseenet-bots/onthisday.key"
+options = { lang = "en", count = 6 }

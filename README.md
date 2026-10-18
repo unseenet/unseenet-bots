@@ -4,7 +4,8 @@ Bots that keep [Unseenet](https://unseenet.org) channels filled with
 current content, and an example of how to build a bot on the Unseenet
 core library.
 
-**Status:** planning. Nothing runs yet; see the issues.
+**Status:** early. Two sources work (Wikipedia *In the news* and *On
+this day*); more are listed in issue #1.
 
 ## Idea
 
@@ -17,6 +18,40 @@ core library.
   doubles as an example for anybody writing their own bot.
 - Readers can comment if the channel has `comments: open`
   (UN-RFC 0030).
+
+## Running it
+
+```sh
+pip install git+https://github.com/unseenet/unseenet-bots.git
+cp bots.example.toml bots.toml            # fill in groups and key files
+unseenet-bots -c bots.toml new-key ~/.config/unseenet-bots/news.key
+#   -> make the printed key a poster in the channel (Make poster)
+unseenet-bots -c bots.toml run --dry-run  # see what would be posted
+unseenet-bots -c bots.toml run            # post what is new
+```
+
+Each `run` fetches every source once and posts what has not been posted
+before (remembered in a state file, and checked against the channel's
+newest threads). Schedule it, e.g. every hour, with the systemd units in
+`contrib/`. It starts its own Tor, or uses a running one if
+`UNSEENET_TOR_SOCKS` names its SOCKS port. Sources are fetched directly
+from the web, not over Tor.
+
+| Source | Posts | Licence |
+|---|---|---|
+| `wikipedia-news` | one post per story in Wikipedia's *In the news* | CC BY-SA 4.0 |
+| `wikipedia-onthisday` | one post a day with the day's anniversaries | CC BY-SA 4.0 |
+
+Open the channel for comments (*Edit group* → *Readers may comment on
+posts*, UN-RFC 0030) so readers can talk about each post.
+
+## Writing a source
+
+A source is a class with a `name` and `fetch(today) -> list[Item]` in
+`src/unseenet_bots/sources/`. An `Item` has a stable `id` (so nothing is
+posted twice), a `subject` and a markdown `body` that ends with the
+credit line its licence asks for. See `wikipedia.py`, and *Writing a bot*
+in the Unseenet docs for the core API underneath.
 
 ## Content and licences
 

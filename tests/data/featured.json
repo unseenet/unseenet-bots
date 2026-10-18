@@ -1,0 +1,24 @@
+{
+  "news": [
+    {
+      "story": "<!--Oct 17--><a rel=\"mw:WikiLink\" href=\"./Example_Mission\" title=\"Example Mission\">The Example Mission</a> <i>(pictured)</i> <b><a rel=\"mw:WikiLink\" href=\"./Example_landing\" title=\"Example landing\">lands on the Moon</a></b>.",
+      "links": [
+        {"title": "Example_landing", "normalizedtitle": "Example landing",
+         "extract": "The Example landing was a lunar landing.",
+         "content_urls": {"desktop": {"page": "https://en.wikipedia.org/wiki/Example_landing"}}},
+        {"title": "Example_Mission", "normalizedtitle": "Example Mission",
+         "content_urls": {"desktop": {"page": "https://en.wikipedia.org/wiki/Example_Mission"}}}
+      ]
+    },
+    {
+      "story": "In <a href=\"./Sport_(game)\">sport</a>, <b><a href=\"./Example_Cup\">the Example Cup</a></b> ends &amp; is won.",
+      "links": []
+    }
+  ],
+  "onthisday": [
+    {"text": "A bridge opened.", "year": 1932,
+     "pages": [{"title": "Bridge", "normalizedtitle": "Bridge",
+                "content_urls": {"desktop": {"page": "https://en.wikipedia.org/wiki/Bridge"}}}]},
+    {"text": "A city was founded.", "year": 1201, "pages": []}
+  ]
+}

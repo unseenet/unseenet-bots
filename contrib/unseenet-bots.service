@@ -1,0 +1,8 @@
+[Unit]
+Description=Post new content to Unseenet channels
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/unseenet-bots -c %h/.config/unseenet-bots/bots.toml run

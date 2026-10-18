@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unseenet-bots"
+version = "0.1.0.dev0"
+description = "Bots that fill Unseenet channels with current content, built on the Unseenet core"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Andreas Lorensen" }]
+requires-python = ">=3.11"
+dependencies = [
+    # the headless posting API, unseenet.core.poster (unseenet/unseenet#166)
+    "unseenet @ git+https://github.com/unseenet/unseenet.git",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+unseenet-bots = "unseenet_bots.runner:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
