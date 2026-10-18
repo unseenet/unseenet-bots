@@ -4,8 +4,7 @@ Bots that keep [Unseenet](https://unseenet.org) channels filled with
 current content, and an example of how to build a bot on the Unseenet
 core library.
 
-**Status:** early. Two sources work (Wikipedia *In the news* and *On
-this day*); more are listed in issue #1.
+**Status:** early. Six sources work, listed below.
 
 ## Idea
 
@@ -41,6 +40,15 @@ from the web, not over Tor.
 |---|---|---|
 | `wikipedia-news` | one post per story in Wikipedia's *In the news* | CC BY-SA 4.0 |
 | `wikipedia-onthisday` | one post a day with the day's anniversaries | CC BY-SA 4.0 |
+| `globalvoices` | whole stories from Global Voices, credited at the top | CC BY 3.0 |
+| `theconversation` | the opening paragraphs of articles from The Conversation, and a link to the rest; use `max_per_day`, as their terms do not allow republishing every article | CC BY-ND 4.0 |
+| `eff` | whole posts from EFF's Deeplinks blog | CC BY 4.0 |
+| `nasa-iotd` | NASA's Image of the Day: the caption and a link to the picture | not copyrighted |
+
+Images are left out of every post, because they often have licences of
+their own; each post links to the original. Only items from the last two
+days are posted (`max_age_hours`), so a new bot does not fill its channel
+with old news.
 
 Open the channel for comments (*Edit group* → *Readers may comment on
 posts*, UN-RFC 0030) so readers can talk about each post.

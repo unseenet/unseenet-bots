@@ -16,7 +16,7 @@ import os
 import sys
 import tomllib
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from unseenet.core import crypto
@@ -39,6 +39,8 @@ class Bot:
     identity: str | None = None
     seed_env: str = "UNSEENET_SEED"
     max_per_run: int = 5
+    max_per_day: int | None = None     # e.g. for sources that may not be republished whole
+    max_age_hours: float = 48          # never post what the source published longer ago
     nodes: list[str] | None = None
 
 
@@ -47,6 +49,8 @@ def load_config(path: Path) -> tuple[dict, list[Bot]]:
     defaults = data.get("defaults", {})
     bots = []
     for name, b in data.get("bots", {}).items():
+        if name.startswith("_"):
+            raise SystemExit(f"bot {name}: names starting with _ are reserved")
         try:
             bots.append(Bot(
                 name=name, source=b["source"], group=b["group"],
@@ -54,6 +58,8 @@ def load_config(path: Path) -> tuple[dict, list[Bot]]:
                 key_file=_path(b.get("key_file")), vault=_path(b.get("vault")),
                 identity=b.get("identity"), seed_env=b.get("seed_env", "UNSEENET_SEED"),
                 max_per_run=int(b.get("max_per_run", 5)),
+                max_per_day=int(b["max_per_day"]) if "max_per_day" in b else None,
+                max_age_hours=float(b.get("max_age_hours", 48)),
                 nodes=b.get("nodes", defaults.get("nodes"))))
         except KeyError as exc:
             raise SystemExit(f"bot {name}: missing {exc}") from exc
@@ -77,11 +83,18 @@ class State:
     def posted(self, bot: str) -> dict:
         return self.data.setdefault(bot, {})
 
-    def mark(self, bot: str, item_id: str, message_id: str) -> None:
+    def mark(self, bot: str, item_id: str, message_id: str, now: datetime | None = None) -> None:
         posted = self.posted(bot)
         posted[item_id] = message_id
         for old in list(posted)[:-KEEP]:
             del posted[old]
+        times = self.data.setdefault("_times", {}).setdefault(bot, [])
+        times.append((now or datetime.now(timezone.utc)).isoformat())
+        del times[:-KEEP]
+
+    def posted_since(self, bot: str, since: datetime) -> int:
+        return sum(1 for t in self.data.get("_times", {}).get(bot, [])
+                   if datetime.fromisoformat(t) >= since)
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -90,19 +103,36 @@ class State:
         tmp.replace(self.path)
 
 
-def new_items(items: list[Item], seen: dict, recent_subjects: set[str], limit: int) -> list[Item]:
-    out = [i for i in items if i.id not in seen and i.subject not in recent_subjects]
-    return out[:limit]
+def new_items(items: list[Item], seen: dict, recent_subjects: set[str], limit: int,
+              now: datetime | None = None, max_age_hours: float | None = None) -> list[Item]:
+    """What to post now: not posted before, not too old, at most ``limit``."""
+    oldest = (now or datetime.now(timezone.utc)) - timedelta(hours=max_age_hours) \
+        if max_age_hours else None
+    out = [i for i in items if i.id not in seen and i.subject not in recent_subjects
+           and (oldest is None or i.published is None or i.published >= oldest)]
+    return out[:max(0, limit)]
+
+
+def _limit(bot: Bot, state: State, now: datetime) -> int:
+    if bot.max_per_day is None:
+        return bot.max_per_run
+    left = bot.max_per_day - state.posted_since(bot.name, now - timedelta(days=1))
+    return min(bot.max_per_run, left)
 
 
 async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
-                  poster_factory=Poster, out=print) -> int:
+                  poster_factory=Poster, out=print, now: datetime | None = None) -> int:
     """Post what is new for one bot. Returns the number of posts made."""
-    today = today or datetime.now(timezone.utc).date()
+    now = now or datetime.now(timezone.utc)
+    today = today or now.date()
+    limit = _limit(bot, state, now)
+    if limit <= 0:
+        out(f"{bot.name}: {bot.max_per_day} posts in the last day already; waiting")
+        return 0
     source = get_source(bot.source, **bot.options)
     items = source.fetch(today)
     if dry_run:
-        for item in new_items(items, state.posted(bot.name), set(), bot.max_per_run):
+        for item in new_items(items, state.posted(bot.name), set(), limit, now, bot.max_age_hours):
             out(f"--- {bot.name} -> {bot.group}\nSubject: {item.subject}\n\n{item.body}")
         return 0
     key = load_key(key_file=bot.key_file, vault=bot.vault, identity=bot.identity,
@@ -111,10 +141,10 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
     async with poster_factory(key, bot.nodes, from_name=bot.from_name,
                               log=lambda m: out(f"  {bot.name}: {m}")) as p:
         recent = {subject for _, subject in await p.recent_threads(bot.group)}
-        for item in new_items(items, state.posted(bot.name), recent, bot.max_per_run):
+        for item in new_items(items, state.posted(bot.name), recent, limit, now, bot.max_age_hours):
             result = await p.post(bot.group, item.subject, item.body)
             if result.ok:
-                state.mark(bot.name, item.id, result.message_id)
+                state.mark(bot.name, item.id, result.message_id, now)
                 state.save()                  # after every post: a crash posts nothing twice
                 posted += 1
                 out(f"{bot.name}: posted {item.subject!r} to {len(result.accepted)} node(s)")

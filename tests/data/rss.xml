@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel><title>Example</title>
+<item><title>Newer story &amp; more</title><link>https://example.org/new</link>
+<dc:creator>Ana Writer</dc:creator><pubDate>Sun, 18 Oct 2026 08:00:00 +0000</pubDate>
+<guid isPermaLink="false">https://example.org/?p=2</guid>
+<description>Short version.</description>
+<content:encoded><![CDATA[<p>First <strong> bold </strong> paragraph with <a href="/x">a link</a>.</p><figure><img src="a.jpg"><figcaption>Photo: someone else</figcaption></figure><p>Second paragraph.</p><ul><li>one</li><li>two</li></ul><p>%3Ciframe%20src%3D%22x%22%3E</p><p>Privacy info. This embed will serve content from x</p><script>alert(1)</script>]]></content:encoded>
+<enclosure url="https://example.org/pic.jpg" type="image/jpeg" length="1"/></item>
+<item><title>Old story</title><link>https://example.org/old</link>
+<pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate><guid>https://example.org/?p=1</guid>
+<description>&lt;p&gt;Escaped &lt;em&gt;html&lt;/em&gt; body.&lt;/p&gt;</description></item>
+</channel></rss>

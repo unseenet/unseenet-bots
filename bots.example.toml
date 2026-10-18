@@ -22,3 +22,35 @@ group = "alt.history.onthisday@<owner fingerprint>"
 from_name = "On this day (bot)"
 key_file = "~/.config/unseenet-bots/onthisday.key"
 options = { lang = "en", count = 6 }
+
+[bots.globalvoices]
+source = "globalvoices"         # whole stories, CC BY 3.0
+group = "alt.news.globalvoices@<owner fingerprint>"
+from_name = "Global Voices (bot)"
+key_file = "~/.config/unseenet-bots/globalvoices.key"
+max_per_run = 3
+
+[bots.theconversation]
+source = "theconversation"      # opening paragraphs + link, CC BY-ND 4.0
+group = "alt.news.theconversation@<owner fingerprint>"
+from_name = "The Conversation (bot)"
+key_file = "~/.config/unseenet-bots/theconversation.key"
+max_per_run = 2
+max_per_day = 8                 # extracts, not the whole feed
+options = { paragraphs = 3 }
+
+[bots.eff]
+source = "eff"                  # whole posts, CC BY 4.0
+group = "alt.privacy.eff@<owner fingerprint>"
+from_name = "EFF Deeplinks (bot)"
+key_file = "~/.config/unseenet-bots/eff.key"
+max_per_run = 3
+max_age_hours = 96              # EFF posts a few times a week
+
+[bots.nasa]
+source = "nasa-iotd"            # NASA Image of the Day, not copyrighted
+group = "alt.space.nasa@<owner fingerprint>"
+from_name = "NASA Image of the Day (bot)"
+key_file = "~/.config/unseenet-bots/nasa.key"
+max_per_run = 2
+max_age_hours = 72

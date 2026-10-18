@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+<title>Example Atom</title>
+<entry><id>tag:example.org,2011:article/1</id><published>2026-10-18T12:05:35Z</published>
+<link rel="alternate" type="text/html" href="https://example.org/article-1"/>
+<title>An analysis</title>
+<content type="html">&lt;p&gt;One.&lt;/p&gt;&lt;p&gt;&lt;em&gt;Read more: &lt;a href="https://example.org/2"&gt;other&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;&lt;h2&gt;Head&lt;/h2&gt;&lt;p&gt;Two.&lt;/p&gt;&lt;p&gt;Three.&lt;/p&gt;&lt;p&gt;Four.&lt;/p&gt;</content>
+<summary>Summary.</summary>
+<author><name>Dr. Re Searcher, University of Somewhere</name></author>
+<rights>Licensed as Creative Commons – attribution, no derivatives.</rights></entry>
+</feed>
