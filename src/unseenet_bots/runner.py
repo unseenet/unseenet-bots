@@ -20,6 +20,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from unseenet.core import crypto
+from unseenet.core.markup import MARKDOWN_TYPE
 from unseenet.core.poster import Poster, PosterError, load_key
 
 from .sources import Item, get_source
@@ -142,7 +143,9 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
                               log=lambda m: out(f"  {bot.name}: {m}")) as p:
         recent = {subject for _, subject in await p.recent_threads(bot.group)}
         for item in new_items(items, state.posted(bot.name), recent, limit, now, bot.max_age_hours):
-            result = await p.post(bot.group, item.subject, item.body)
+            # the sources write Markdown (Item.body); say so, or clients show it raw
+            result = await p.post(bot.group, item.subject, item.body,
+                                  content_type=MARKDOWN_TYPE)
             if result.ok:
                 state.mark(bot.name, item.id, result.message_id, now)
                 state.save()                  # after every post: a crash posts nothing twice
