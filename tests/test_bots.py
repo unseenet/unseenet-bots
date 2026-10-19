@@ -70,6 +70,11 @@ async def test_runner_posts_once(tmp_path):
                          poster_factory=poster, out=lines.append) == 0      # nothing twice
     assert set(json.loads((tmp_path / "state.json").read_text())["news"]) == {
         "itn:en:Example_landing", "itn:en:Example_Cup"}
+    # posted as Markdown (UN-RFC 0031), which the sources write
+    bodies = [node.store.by_number(manifest.group, n)[1] for n in node.store.numbers(manifest.group)]
+    posts = [b for b in bodies if b"Message-Kind: post" in b]
+    assert len(posts) == 2
+    assert all(b"Content-Type: text/markdown" in b for b in posts)
     # and nothing twice even without the state file: the channel's threads are checked
     assert await run_bot(bot, State(tmp_path / "other.json"), today=TODAY,
                          poster_factory=poster, out=lines.append) == 0
