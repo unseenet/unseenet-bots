@@ -1,18 +1,19 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "unseenet-bots"
-version = "0.1.0.dev0"
+dynamic = ["version"]
 description = "Bots that fill Unseenet channels with current content, built on the Unseenet core"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "Andreas Lorensen" }]
 requires-python = ">=3.11"
 dependencies = [
     # the headless posting API, unseenet.core.poster (unseenet/unseenet#166)
-    "unseenet @ git+https://github.com/unseenet/unseenet.git",
+    "unseenet>=0.4.1,<0.5",   # one minor version of the core at a time
 ]
 
 [project.optional-dependencies]
@@ -20,6 +21,12 @@ dev = ["pytest>=8", "pytest-asyncio>=0.23"]
 
 [project.scripts]
 unseenet-bots = "unseenet_bots.runner:main"
+
+[project.urls]
+Homepage = "https://github.com/unseenet/unseenet-bots"
+
+[tool.setuptools.dynamic]
+version = { attr = "unseenet_bots.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

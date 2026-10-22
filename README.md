@@ -21,7 +21,7 @@ core library.
 ## Running it
 
 ```sh
-pip install git+https://github.com/unseenet/unseenet-bots.git
+pip install unseenet-bots
 cp bots.example.toml bots.toml            # fill in groups and key files
 unseenet-bots -c bots.toml new-key ~/.config/unseenet-bots/news.key
 #   -> make the printed key a poster in the channel (Make poster)
@@ -81,6 +81,19 @@ issue #1.
 
 Whoever runs a bot is responsible for its content and for following
 the source's licence.
+
+## Versions and releases
+
+Versions follow [semantic versioning](https://semver.org/) on the same
+principles as [unseenet](https://github.com/unseenet/unseenet/blob/main/docs/development.md#versioning):
+tags `vX.Y.Z` on `main`, the changes in [CHANGELOG.md](CHANGELOG.md), and
+releases on [PyPI](https://pypi.org/p/unseenet-bots). Each release names the
+minor version of unseenet it works with (`unseenet>=0.4.1,<0.5`).
+
+To release: move the entries under `## [Unreleased]` in `CHANGELOG.md` to a
+new `## [X.Y.Z] - YYYY-MM-DD` section, set `__version__` in
+`src/unseenet_bots/__init__.py`, commit, then
+`git tag -a vX.Y.Z -m "unseenet-bots X.Y.Z" && git push origin vX.Y.Z`.
 
 ## Licence
 
