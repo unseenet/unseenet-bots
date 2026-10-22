@@ -48,7 +48,7 @@ async def test_runner_posts_once(tmp_path):
 
     owner, bot_key = crypto.Identity.generate(), crypto.Identity.generate()
     manifest = make_manifest(owner, "alt.news", "channel", posters=[bot_key.key_text],
-                             comments="open", pow_bits=8)
+                             comments="open", pow_bits=12)   # FLOOR_POW (UN-RFC 0025, 5)
     node = Node(Store(), NodeConfig(min_pow=8, forward_delay=(0, 0)))
     node.accept(manifest.to_bytes())
     server = await node.serve("127.0.0.1", 0)
@@ -66,6 +66,7 @@ async def test_runner_posts_once(tmp_path):
 
     lines = []
     assert await run_bot(bot, state, today=TODAY, poster_factory=poster, out=lines.append) == 2
+    assert (tmp_path / "bot.key.state.json").exists()     # the key's chain, beside the key
     assert await run_bot(bot, State(tmp_path / "state.json"), today=TODAY,
                          poster_factory=poster, out=lines.append) == 0      # nothing twice
     assert set(json.loads((tmp_path / "state.json").read_text())["news"]) == {
