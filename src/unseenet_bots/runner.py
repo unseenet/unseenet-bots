@@ -114,6 +114,13 @@ def new_items(items: list[Item], seen: dict, recent_subjects: set[str], limit: i
     return out[:max(0, limit)]
 
 
+def key_state(bot: Bot) -> Path | None:
+    """Where the bot key's ripening chain is kept (UN-RFC 0025): next to its key file,
+    where ``unseenet ripen --key-file`` puts it at setup, so a key ripened there is the
+    one that posts. Holds nothing secret. Without a key file, the core's default."""
+    return Path(_path(bot.key_file) + ".state.json") if bot.key_file else None
+
+
 def _limit(bot: Bot, state: State, now: datetime) -> int:
     if bot.max_per_day is None:
         return bot.max_per_run
@@ -139,7 +146,7 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
     key = load_key(key_file=bot.key_file, vault=bot.vault, identity=bot.identity,
                    seed_env=bot.seed_env)
     posted = 0
-    async with poster_factory(key, bot.nodes, from_name=bot.from_name,
+    async with poster_factory(key, bot.nodes, from_name=bot.from_name, state=key_state(bot),
                               log=lambda m: out(f"  {bot.name}: {m}")) as p:
         recent = {subject for _, subject in await p.recent_threads(bot.group)}
         for item in new_items(items, state.posted(bot.name), recent, limit, now, bot.max_age_hours):

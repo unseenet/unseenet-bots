@@ -25,9 +25,20 @@ pip install git+https://github.com/unseenet/unseenet-bots.git
 cp bots.example.toml bots.toml            # fill in groups and key files
 unseenet-bots -c bots.toml new-key ~/.config/unseenet-bots/news.key
 #   -> make the printed key a poster in the channel (Make poster)
+unseenet ripen --key-file ~/.config/unseenet-bots/news.key --to 0 \
+    --node NODE.onion --publish            # once: 7-11 minutes, see below
 unseenet-bots -c bots.toml run --dry-run  # see what would be posted
 unseenet-bots -c bots.toml run            # post what is new
 ```
+
+**A new key ripens first** (UN-RFC 0025): nodes take posts only from keys
+that have done a few minutes of work, which is what keeps throwaway keys
+from spamming. Do it once at setup with `unseenet ripen` as above; its
+chain goes in `<key file>.state.json`, beside the key, where the runner
+finds it (it holds nothing secret). A first `run` without it would ripen
+then, and take as long. Ripening on to level 3 removes the extra postage
+a young key pays: `unseenet ripen --key-file KEY --to 3 --node NODE --publish`
+in the background, about 2.5-4 days on one core at low priority.
 
 Each `run` fetches every source once and posts what has not been posted
 before (remembered in a state file, and checked against the channel's
