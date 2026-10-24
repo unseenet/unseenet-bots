@@ -17,6 +17,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import hashlib
+import inspect
+import io
 import json
 import os
 import sys
@@ -29,7 +31,7 @@ from unseenet.core import crypto
 from unseenet.core.markup import MARKDOWN_TYPE
 from unseenet.core.poster import Poster, PosterError, load_key
 
-from .sources import Item, get_source
+from .sources import Item, Picture, free_licence, get_bytes, get_source
 
 KEEP = 1000          # remembered item IDs per bot
 
@@ -50,6 +52,7 @@ class Bot:
     max_age_hours: float = 48          # never post what the source published longer ago
     nodes: list[str] | None = None
     profile: dict = field(default_factory=dict)    # [bots.X.profile]: about, links, lang, picture
+    pictures: str = "no"            # "yes", "check" or "no": pictures on posts (#7)
 
 
 PROFILE_FOOTER = ("An automatic channel run by the [Unseenet](https://unseenet.org) project - "
@@ -152,10 +155,113 @@ def load_config(path: Path) -> tuple[dict, list[Bot]]:
                 max_per_day=int(b["max_per_day"]) if "max_per_day" in b else None,
                 max_age_hours=float(b.get("max_age_hours", 48)),
                 nodes=b.get("nodes", defaults.get("nodes")),
-                profile=b.get("profile", {})))
+                profile=b.get("profile", {}),
+                pictures=_pictures_rule(name, b.get("pictures", "no"))))
         except KeyError as exc:
             raise SystemExit(f"bot {name}: missing {exc}") from exc
     return defaults, bots
+
+
+def _pictures_rule(name: str, value) -> str:
+    if value not in ("yes", "check", "no"):
+        raise SystemExit(f"bot {name}: pictures is yes, check or no")
+    return value
+
+
+# --- pictures on posts (#7): only where the licence clearly allows it ----------------
+
+MAX_PICTURE_PX = 1600               # scaled down: a picture for reading, not for printing
+
+
+def core_posts_files(poster_factory=Poster) -> bool:
+    """Whether this core's Poster posts files (unseenet 0.5)."""
+    cls = poster_factory if isinstance(poster_factory, type) else Poster
+    return "files" in inspect.signature(cls.post).parameters
+
+
+def allowed_pictures(bot: Bot, item: Item, out=print) -> list[tuple[Picture, str, str]]:
+    """The item's pictures the bot may post, with their licence and author: "yes"
+    takes what the source vouches for, "check" only a picture whose licence is known
+    and free (public domain, CC0, CC BY, CC BY-SA), "no" none."""
+    if bot.pictures == "no":
+        return []
+    chosen = []
+    for pic in item.pictures:
+        lic, author = pic.licence, pic.author
+        if lic is None and pic.lookup is not None:
+            try:
+                found = pic.lookup()
+            except Exception as exc:  # noqa: BLE001 - then only the link
+                out(f"{bot.name}: licence of {pic.url} not known: {exc}")
+                found = None
+            if found:
+                lic, author = found
+        if (bot.pictures == "yes" and lic is not None) or free_licence(lic):
+            chosen.append((pic, lic or "", author))
+        else:
+            out(f"{bot.name}: picture left out ({lic or 'licence unknown'}): {pic.url}")
+    return chosen
+
+
+def credit_line(pic: Picture, licence: str, author: str, attached: bool) -> str:
+    """The credit under a picture: what it shows, who made it, its licence, its page."""
+    who = f" by {author}" if author and author.lower() not in licence.lower() else ""
+    where = pic.page or pic.url
+    what = "Picture" if attached else f"[Picture]({pic.url})"
+    return f"*{what}{': ' + pic.alt if pic.alt else ''}{who}, {licence} - [{where}]({where})*"
+
+
+def scale_down(octets: bytes, max_px: int = MAX_PICTURE_PX) -> bytes:
+    """A big picture made smaller (the core takes its metadata out when it posts)."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return octets
+    try:
+        im = Image.open(io.BytesIO(octets))
+        if max(im.size) <= max_px:
+            return octets
+        fmt = im.format or "JPEG"
+        im.thumbnail((max_px, max_px))
+        if fmt == "JPEG" and im.mode not in ("RGB", "L"):
+            im = im.convert("RGB")
+        buf = io.BytesIO()
+        im.save(buf, fmt, **({"quality": 85} if fmt in ("JPEG", "WEBP") else {}))
+        return buf.getvalue()
+    except Exception:  # noqa: BLE001 - not a picture we can read: as it is
+        return octets
+
+
+async def post_item(p, bot: Bot, item: Item, files_ok: bool, out=print, fetch=get_bytes):
+    """Post an item, with the pictures its licence allows when the core can, else a
+    link to each with its credit; without them if the group or the node takes none."""
+    pics = allowed_pictures(bot, item, out)
+    files = []
+    if pics and files_ok:
+        for pic, _, _ in pics:
+            try:
+                octets = scale_down(fetch(pic.url, "image/*"))
+                files.append((pic.url.rsplit("/", 1)[-1][:100] or "picture", octets, pic.alt))
+            except (OSError, ValueError) as exc:
+                out(f"{bot.name}: picture not fetched: {exc}")
+
+    def body(attached: bool) -> str:
+        if not pics:
+            return item.body
+        lines = [credit_line(pic, lic, author, attached) for pic, lic, author in pics]
+        return item.body.rstrip("\n") + "\n\n" + "\n\n".join(lines) + "\n"
+
+    if files:
+        try:
+            result = await p.post(bot.group, item.subject, body(True), files=files,
+                                  content_type=MARKDOWN_TYPE)
+            if result.ok:
+                return result
+            out(f"{bot.name}: not posted with its picture "
+                f"({result.refused or result.unreachable}); posting a link instead")
+        except PosterError as exc:
+            out(f"{bot.name}: picture not posted ({exc}); posting a link instead")
+    return await p.post(bot.group, item.subject, body(False), content_type=MARKDOWN_TYPE)
 
 
 def _path(value: str | None) -> str | None:
@@ -231,6 +337,9 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
     source = get_source(bot.source, **bot.options)
     items = source.fetch(today)
     if dry_run:
+        for item in new_items(items, state.posted(bot.name), set(), limit, now, bot.max_age_hours):
+            for pic, lic, _ in allowed_pictures(bot, item, out):
+                out(f"--- {bot.name}: picture for {item.subject!r}: {pic.url} ({lic})")
         prof = bot_profile(bot)
         marks = state.data.get("_profiles", {}).get(bot.name, {})
         if prof and marks.get("profile") != _mark(prof):
@@ -245,10 +354,10 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
                               log=lambda m: out(f"  {bot.name}: {m}")) as p:
         await publish_profile(bot, state, p, out)
         recent = {subject for _, subject in await p.recent_threads(bot.group)}
+        files_ok = bot.pictures != "no" and core_posts_files(poster_factory)
         for item in new_items(items, state.posted(bot.name), recent, limit, now, bot.max_age_hours):
-            # the sources write Markdown (Item.body); say so, or clients show it raw
-            result = await p.post(bot.group, item.subject, item.body,
-                                  content_type=MARKDOWN_TYPE)
+            # Markdown (Item.body), with the pictures its licence allows (#7)
+            result = await post_item(p, bot, item, files_ok, out)
             if result.ok:
                 state.mark(bot.name, item.id, result.message_id, now)
                 state.save()                  # after every post: a crash posts nothing twice

@@ -24,7 +24,7 @@ from datetime import date, datetime, timezone
 from email.utils import parsedate_to_datetime
 from html import unescape
 
-from . import Item, article_markdown, clip, get_bytes, html_to_text, paragraphs
+from . import Item, Picture, article_markdown, clip, get_bytes, html_to_text, paragraphs
 
 ATOM = "{http://www.w3.org/2005/Atom}"
 CONTENT = "{http://purl.org/rss/1.0/modules/content/}encoded"
@@ -204,5 +204,7 @@ class NasaImageOfTheDay(FeedSource):
             lines += [f"**[See the picture at NASA]({entry['link']})**", ""]
         lines += ["---", "NASA Image of the Day (https://www.nasa.gov/image-of-the-day/). NASA "
                          "material is not copyrighted; NASA does not endorse this post or Unseenet."]
+        pics = [Picture(entry["image"], alt=html_to_text(entry["title"]), page=entry["link"],
+                        licence="Public domain", author="NASA")] if entry.get("image") else []
         return Item(id="nasa:" + entry["id"], subject=_subject(entry["title"]),
-                    body="\n".join(lines) + "\n", published=entry["published"])
+                    body="\n".join(lines) + "\n", published=entry["published"], pictures=pics)

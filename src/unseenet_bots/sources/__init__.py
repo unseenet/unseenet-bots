@@ -10,7 +10,8 @@ from __future__ import annotations
 import json
 import re
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Callable
 from datetime import date, datetime
 from html import unescape
 from html.parser import HTMLParser
@@ -23,11 +24,69 @@ USER_AGENT = (f"unseenet-bots/{__version__} "
 
 
 @dataclass
+class Picture:
+    """A picture a source offers with an item (unseenet-bots#7). ``licence`` is known
+    for a source whose pictures all have the same (NASA: public domain); else
+    ``lookup()`` finds it - ``(licence, author)`` or None when it cannot be known -
+    only when the bot's rule asks for it. ``page`` is where people can see the
+    picture and its licence; ``alt`` describes it."""
+    url: str
+    alt: str = ""
+    page: str = ""
+    licence: str | None = None
+    author: str = ""
+    lookup: Callable[[], tuple[str, str] | None] | None = None
+
+
+@dataclass
 class Item:
     id: str            # stable, so a restart does not post it twice
     subject: str
     body: str          # markdown, ending with the credit line
     published: datetime | None = None   # when the source published it (UTC), if known
+    pictures: list[Picture] = field(default_factory=list)
+
+
+def free_licence(name: str | None) -> bool:
+    """A licence under which the project may post a picture that cannot be taken
+    down again: public domain, CC0, CC BY or CC BY-SA - never NC or ND."""
+    if not name:
+        return False
+    words = re.sub(r"[-_/]", " ", name.lower()).split()
+    text = " ".join(words)
+    if text.startswith(("public domain", "pd")) or text.startswith("cc0") or "cc zero" in text:
+        return True
+    return text.startswith("cc by") and not {"nc", "nd"} & set(words)
+
+
+COMMONS_API = ("https://commons.wikimedia.org/w/api.php?action=query&format=json"
+               "&prop=imageinfo&iiprop=extmetadata&titles=File:{name}")
+_COMMONS = re.compile(r"^https://upload\.wikimedia\.org/wikipedia/commons/(?:thumb/)?"
+                      r"[0-9a-f]/[0-9a-f]{2}/([^/]+)")
+
+
+def commons_page(url: str) -> str:
+    """The Commons page of a picture there (where its licence is shown), or ''."""
+    m = _COMMONS.match(url)
+    return f"https://commons.wikimedia.org/wiki/File:{m.group(1)}" if m else ""
+
+
+def commons_licence(url: str, fetch=None) -> tuple[str, str] | None:
+    """``(licence, author)`` of a picture on Wikimedia Commons, read from the file's
+    ``extmetadata``; None for anything not on Commons (a local, non-free file on
+    Wikipedia never is) or without a licence there."""
+    m = _COMMONS.match(url)
+    if not m:
+        return None
+    from urllib.parse import quote, unquote
+    data = (fetch or get_json)(COMMONS_API.format(name=quote(unquote(m.group(1)))))
+    for page in (data.get("query", {}).get("pages", {}) or {}).values():
+        meta = ((page.get("imageinfo") or [{}])[0]).get("extmetadata", {})
+        lic = (meta.get("LicenseShortName") or {}).get("value", "")
+        artist = html_to_text((meta.get("Artist") or {}).get("value", ""))
+        if lic:
+            return lic.strip(), artist[:200]
+    return None
 
 
 class Source(Protocol):

@@ -87,6 +87,26 @@ and a link to the channel. `unseenet-bots profile --dry-run` shows the
 profiles; `unseenet-bots profile` publishes them now, without posting. Use
 no source's logo as the picture (trademarks).
 
+## Pictures
+
+Posts cannot be removed from the network afterwards, so a bot posts a picture
+only where the licence clearly allows it. Per bot, `pictures`:
+
+| | |
+|---|---|
+| `"no"` (default) | no pictures; links as before |
+| `"check"` | only a picture whose licence is known and free: public domain, CC0, CC BY or CC BY-SA (never NC or ND). For Wikipedia it is read from the file's page on Wikimedia Commons; a local, non-free file is never posted |
+| `"yes"` | the pictures the source vouches for, e.g. NASA's own, which are not copyrighted |
+
+Every picture gets a credit line under the post: what it shows, who made it,
+its licence and its page. Big pictures are scaled down to 1600 px; the core
+takes their metadata out. If the core cannot post files (before unseenet
+0.5), or the group or node takes none, the post links to the picture with the
+same credit. `run --dry-run` shows which pictures would go and why. Today the
+NASA and Wikipedia "In the news" sources offer pictures; EFF and Global Voices
+only link to theirs (each picture has its own licence there), and The
+Conversation's are agency pictures, so never.
+
 ## Writing a source
 
 A source is a class with a `name` and `fetch(today) -> list[Item]` in
