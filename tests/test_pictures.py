@@ -58,9 +58,11 @@ def test_the_pictured_page_of_a_wikipedia_story():
     [first, _] = InTheNews(fetch=lambda url: _commons("CC BY 4.0")(url)
                            if "commons" in url else feed).fetch_items(feed)
     [pic] = first.pictures
-    assert pic.url == COMMONS and pic.alt == "Example Mission"
+    assert pic.url == COMMONS.replace("/320px-", "/960px-") and pic.alt == "Example Mission"
     assert pic.page == "https://commons.wikimedia.org/wiki/File:Example_rocket.jpg"
     assert pic.licence is None and pic.lookup() == ("CC BY 4.0", "Jane Doe")
+    feed["news"][0]["links"][1]["thumbnail"] = {"source": "https://elsewhere.example/a.jpg"}
+    assert InTheNews(fetch=lambda url: feed).fetch_items(feed)[0].pictures == []
 
 
 def _bot(rule):
