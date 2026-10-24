@@ -9,6 +9,14 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ### Added
 
+- **Pictures on posts, only where the licence allows it** (#7): `pictures =
+  "yes" | "check" | "no"` per bot (default `no`). NASA's Image of the Day
+  (not copyrighted, `yes`) and the picture of a Wikipedia "In the news" story
+  (`check`: posted only when Wikimedia Commons says public domain, CC0, CC BY
+  or CC BY-SA). Each gets a credit line with its author, licence and page;
+  big pictures are scaled down to 1600 px and cleaned of metadata by the core.
+  Without a core that posts files (unseenet 0.5), or where the group or node
+  takes none, the post links to the picture with the same credit.
 - **Profiles for the bots** (#8): each run first publishes the bot's public
   profile with the bot mark (UN-RFC 0022), Markdown About text, links,
   languages and optionally a ready 128 px WebP picture - only when new or

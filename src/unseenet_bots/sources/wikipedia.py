@@ -10,7 +10,9 @@ from __future__ import annotations
 import re
 from datetime import date
 
-from . import Item, get_json, html_to_markdown, html_to_text
+from . import Item, Picture, commons_licence, commons_page, get_json, html_to_markdown, html_to_text
+
+_PICTURED = re.compile(r'href="\./([^"]+)"[^>]*>[^<]*</a>\s*(?:<i>)?\s*\(pictured\)')
 
 FEED = "https://{lang}.wikipedia.org/api/rest_v1/feed/featured/{d:%Y}/{d:%m}/{d:%d}"
 LICENCE = "CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)"
@@ -62,8 +64,22 @@ class InTheNews:
             lines.append(f"From Wikipedia's \"In the news\" ({base}Portal:Current_events). "
                          f"Text from Wikipedia under {LICENCE}; this post is under the same licence.")
             items.append(Item(id=f"itn:{self.lang}:{key}", subject=_subject(html_to_text(html)),
-                              body="\n".join(lines) + "\n"))
+                              body="\n".join(lines) + "\n", pictures=self._pictured(html, pages)))
         return items
+
+    def _pictured(self, html: str, pages: list[dict]) -> list[Picture]:
+        """The story's picture - the page marked "(pictured)" - if it has one. Its
+        licence is looked up on Commons only when the bot asks (unseenet-bots#7)."""
+        m = _PICTURED.search(html)
+        page = next((p for p in pages if m and p.get("title") == m.group(1)), None)
+        thumb = (page or {}).get("thumbnail") or {}
+        url = thumb.get("source", "")
+        if not url.startswith("https://upload.wikimedia.org/"):
+            return []
+        url = re.sub(r"/\d+px-", "/960px-", url)       # a standard size, enough to read
+        return [Picture(url, alt=page.get("normalizedtitle") or page.get("title", ""),
+                        page=commons_page(url) or _page_url(page),
+                        lookup=lambda: commons_licence(url, self._get))]
 
     def fetch(self, today: date) -> list[Item]:
         return self.fetch_items(_feed(self.lang, today, self._get))

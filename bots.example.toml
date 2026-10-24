@@ -13,6 +13,7 @@ source = "wikipedia-news"       # one post per story in Wikipedia's "In the news
 group = "alt.news.wikipedia@<owner fingerprint>"
 from_name = "Wikipedia news (bot)"
 key_file = "~/.config/unseenet-bots/news.key"
+pictures = "check"              # the story's picture, only if Commons says PD, CC0, CC BY or CC BY-SA
 max_per_run = 5
 options = { lang = "en" }
 
@@ -92,6 +93,7 @@ source = "nasa-iotd"            # NASA Image of the Day, not copyrighted
 group = "alt.space.nasa@<owner fingerprint>"
 from_name = "NASA Image of the Day (bot)"
 key_file = "~/.config/unseenet-bots/nasa.key"
+pictures = "yes"                # NASA's own pictures are not copyrighted
 max_per_run = 2
 max_age_hours = 72
 
