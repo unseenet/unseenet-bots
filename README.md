@@ -64,6 +64,29 @@ with old news.
 Open the channel for comments (*Edit group* → *Readers may comment on
 posts*, UN-RFC 0030) so readers can talk about each post.
 
+## Profiles
+
+Every bot says it is a bot: each run first publishes its public profile with
+the **bot mark** (UN-RFC 0022), so clients mark its posts - but only when the
+text or the picture is new or has changed (a short hash is kept in the state
+file). In `bots.toml`, per bot:
+
+```toml
+[bots.nasa.profile]
+about = "NASA's Image of the Day, with its caption."   # Markdown
+not_affiliated_with = "NASA"
+lang = "en"
+links = { web = "https://www.nasa.gov/image-of-the-day/" }
+picture = "~/.config/unseenet-bots/nasa.webp"   # optional: 128 px WebP, no metadata
+picture_alt = "..."
+```
+
+Every About ends with the same line: an automatic channel run by the
+Unseenet project, comment below each post, not affiliated with the source,
+and a link to the channel. `unseenet-bots profile --dry-run` shows the
+profiles; `unseenet-bots profile` publishes them now, without posting. Use
+no source's logo as the picture (trademarks).
+
 ## Writing a source
 
 A source is a class with a `name` and `fetch(today) -> list[Item]` in

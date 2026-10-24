@@ -7,6 +7,16 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Profiles for the bots** (#8): each run first publishes the bot's public
+  profile with the bot mark (UN-RFC 0022), Markdown About text, links,
+  languages and optionally a ready 128 px WebP picture - only when new or
+  changed. Every About ends with the same line: run by the Unseenet project,
+  comment below each post, not affiliated with the source, and the channel.
+  `unseenet-bots profile [BOT ...]` publishes them without posting;
+  `--dry-run` shows them. Draft texts for the six bots in `bots.example.toml`.
+
 ## [0.1.0] - 2026-10-22
 
 The first release. Works with unseenet 0.4 (`unseenet>=0.4.1,<0.5`); nodes

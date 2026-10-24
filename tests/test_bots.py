@@ -80,3 +80,63 @@ async def test_runner_posts_once(tmp_path):
     assert await run_bot(bot, State(tmp_path / "other.json"), today=TODAY,
                          poster_factory=poster, out=lines.append) == 0
     server.close()
+
+
+def _profiled(group="alt.space.nasa@aaaaaaaaaaaaaaaa", **extra):
+    return Bot(name="nasa", source="nasa-iotd", group=group, from_name="NASA (bot)",
+               profile={"about": "NASA's Image of the Day, with its caption.",
+                        "links": {"web": "https://www.nasa.gov/image-of-the-day/"},
+                        "lang": "en", "not_affiliated_with": "NASA", **extra})
+
+
+def test_a_bot_profile_has_the_mark_the_footer_and_the_links():
+    from unseenet_bots.runner import bot_profile
+    prof = bot_profile(_profiled())
+    assert prof["bot"] is True and prof["about_type"].startswith("text/markdown")
+    about = prof["about"]
+    assert about.startswith("NASA's Image of the Day")
+    assert "Not affiliated with NASA." in about and "comment below each post" in about
+    assert "[alt.space.nasa](unseenet:join?g=alt.space.nasa@aaaaaaaaaaaaaaaa)" in about
+    assert prof["links"] == [{"kind": "web", "value": "https://www.nasa.gov/image-of-the-day/"}]
+    assert prof["lang"] == ["en"]
+    assert bot_profile(Bot(name="x", source="eff", group="g@a", from_name="x")) is None
+
+
+def test_too_long_an_about_is_refused():
+    import pytest
+    from unseenet_bots.runner import bot_profile
+    with pytest.raises(ValueError, match="2048"):
+        bot_profile(_profiled(about="x" * 2100))
+
+
+async def test_the_profile_is_published_once_and_again_when_it_changes(tmp_path):
+    from unseenet.core import profiles as prof
+    from unseenet_bots.runner import profile_bot, publish_profile
+
+    bot_key = crypto.Identity.generate()
+    node = Node(Store(), NodeConfig(min_pow=8, forward_delay=(0, 0)))
+    server = await node.serve("127.0.0.1", 0)
+    addr = f"127.0.0.1:{server.sockets[0].getsockname()[1]}"
+    key_file = tmp_path / "bot.key"
+    key_file.write_text(bot_key.seed.hex())
+    bot = _profiled()
+    bot.key_file, bot.nodes = str(key_file), [addr]
+    state = State(tmp_path / "state.json")
+
+    def poster(*a, **kw):
+        return Poster(*a, tor="none", **kw)
+
+    lines = []
+    assert await profile_bot(bot, state, poster_factory=poster, out=lines.append)
+    pid = prof.profile_id(bot_key.public_key)
+    first = node.store.manifest(pid)
+    assert first is not None and "Not affiliated with NASA" in json.dumps(first.raw)
+    async with poster(bot_key, [addr], state=str(key_file) + ".state.json") as p:
+        assert not await publish_profile(bot, State(tmp_path / "state.json"), p, lines.append)
+        bot.profile["about"] = "NASA's Image of the Day."            # changed: again
+        assert await publish_profile(bot, state, p, lines.append)
+    assert "NASA's Image of the Day.\\n\\n" in json.dumps(node.store.manifest(pid).raw)
+    out = []
+    await profile_bot(bot, state, dry_run=True, out=out.append)
+    assert '"bot": true' in out[0]
+    server.close()

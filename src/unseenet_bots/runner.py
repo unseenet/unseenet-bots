@@ -5,12 +5,18 @@ posts what is new; schedule it with a systemd timer or cron.
     unseenet-bots -c bots.toml run --dry-run      # show what would be posted
     unseenet-bots -c bots.toml run                # post
     unseenet-bots -c bots.toml run news           # only the bot named news
+    unseenet-bots -c bots.toml profile --dry-run  # show the bots' public profiles
+    unseenet-bots -c bots.toml profile            # publish them now, without posting
+
+Each run publishes a bot's public profile first - with the bot mark, so clients
+show that it is a bot - but only when its text or picture is new or has changed.
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import sys
@@ -43,6 +49,90 @@ class Bot:
     max_per_day: int | None = None     # e.g. for sources that may not be republished whole
     max_age_hours: float = 48          # never post what the source published longer ago
     nodes: list[str] | None = None
+    profile: dict = field(default_factory=dict)    # [bots.X.profile]: about, links, lang, picture
+
+
+PROFILE_FOOTER = ("An automatic channel run by the [Unseenet](https://unseenet.org) project - "
+                  "comment below each post.{affiliation} Posts go to [{channel}]({address}).")
+MAX_ABOUT = 2048                  # UN-RFC 0022 section 4.1
+
+
+def channel_address(group: str) -> str:
+    """The channel's address in the form every client since 0.4 opens (the newer
+    ``unseenet:<group-id>`` once clients on 0.5 are out, unseenet/unseenet#386)."""
+    return f"unseenet:join?g={group}"
+
+
+def bot_profile(bot: Bot) -> dict | None:
+    """The bot's public profile (UN-RFC 0022): its About in Markdown with the footer
+    every bot gets, its links and languages, and the bot mark. None when the config
+    gives no profile."""
+    cfg = bot.profile
+    if not cfg:
+        return None
+    from unseenet.core.profiles import make_profile
+    source = cfg.get("not_affiliated_with")
+    about = cfg.get("about", "").strip()
+    footer = PROFILE_FOOTER.format(
+        affiliation=f" Not affiliated with {source}." if source else "",
+        channel=bot.group.split("@")[0], address=channel_address(bot.group))
+    text = (about + "\n\n" + footer) if about else footer
+    if len(text) > MAX_ABOUT:
+        raise ValueError(f"bot {bot.name}: the profile's about is over {MAX_ABOUT} characters")
+    links = [{"kind": k, "value": v} for k, v in cfg.get("links", {}).items()]
+    lang = cfg.get("lang")
+    return make_profile(about=text, links=links, lang=[lang] if isinstance(lang, str) else lang,
+                        bot=True, markdown=True)
+
+
+def bot_picture(bot: Bot) -> dict | None:
+    """The bot's profile picture: a file that is already the middle square, 128 px
+    WebP without metadata (UN-RFC 0022 section 8.1), so any core can publish it."""
+    path = bot.profile.get("picture")
+    if not path:
+        return None
+    from unseenet.core.profiles import make_picture
+    data = Path(_path(path)).read_bytes()
+    return make_picture(data, "image/webp", int(bot.profile.get("picture_px", 128)),
+                        alt=bot.profile.get("picture_alt", ""))
+
+
+def _mark(obj) -> str:
+    return hashlib.sha256(json.dumps(obj, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def _session_of(poster):
+    """The Session a Poster posts through (core 0.4 and later)."""
+    s = getattr(poster, "session", None) or getattr(poster, "_session", None)
+    if s is None:
+        raise ValueError("this unseenet core cannot publish profiles through its Poster")
+    return s
+
+
+async def publish_profile(bot: Bot, state: "State", poster, out=print, force: bool = False) -> bool:
+    """Publish the bot's profile and picture when new or changed (or ``force``).
+    Returns True when something was published. A failure is said and posting goes on."""
+    marks = state.data.setdefault("_profiles", {}).setdefault(bot.name, {})
+    done = False
+    for what, make, publish in (("profile", bot_profile, "publish_profile"),
+                                ("picture", bot_picture, "publish_picture")):
+        try:
+            obj = make(bot)
+        except (OSError, ValueError) as exc:
+            out(f"{bot.name}: no {what}: {exc}")
+            continue
+        if obj is None or (marks.get(what) == _mark(obj) and not force):
+            continue
+        try:
+            await getattr(_session_of(poster), publish)(obj)
+        except Exception as exc:  # noqa: BLE001 - posting goes on without it
+            out(f"{bot.name}: could not publish the {what} yet: {exc}")
+            continue
+        marks[what] = _mark(obj)
+        state.save()
+        done = True
+        out(f"{bot.name}: published the {what}" + (" with the bot mark" if what == "profile" else ""))
+    return done
 
 
 def load_config(path: Path) -> tuple[dict, list[Bot]]:
@@ -61,7 +151,8 @@ def load_config(path: Path) -> tuple[dict, list[Bot]]:
                 max_per_run=int(b.get("max_per_run", 5)),
                 max_per_day=int(b["max_per_day"]) if "max_per_day" in b else None,
                 max_age_hours=float(b.get("max_age_hours", 48)),
-                nodes=b.get("nodes", defaults.get("nodes"))))
+                nodes=b.get("nodes", defaults.get("nodes")),
+                profile=b.get("profile", {})))
         except KeyError as exc:
             raise SystemExit(f"bot {name}: missing {exc}") from exc
     return defaults, bots
@@ -140,6 +231,10 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
     source = get_source(bot.source, **bot.options)
     items = source.fetch(today)
     if dry_run:
+        prof = bot_profile(bot)
+        marks = state.data.get("_profiles", {}).get(bot.name, {})
+        if prof and marks.get("profile") != _mark(prof):
+            out(f"--- {bot.name}: would publish its profile first\n{prof.get('about', '')}")
         for item in new_items(items, state.posted(bot.name), set(), limit, now, bot.max_age_hours):
             out(f"--- {bot.name} -> {bot.group}\nSubject: {item.subject}\n\n{item.body}")
         return 0
@@ -148,6 +243,7 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
     posted = 0
     async with poster_factory(key, bot.nodes, from_name=bot.from_name, state=key_state(bot),
                               log=lambda m: out(f"  {bot.name}: {m}")) as p:
+        await publish_profile(bot, state, p, out)
         recent = {subject for _, subject in await p.recent_threads(bot.group)}
         for item in new_items(items, state.posted(bot.name), recent, limit, now, bot.max_age_hours):
             # the sources write Markdown (Item.body); say so, or clients show it raw
@@ -163,6 +259,23 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
     return posted
 
 
+async def profile_bot(bot: Bot, state: State, dry_run: bool = False, poster_factory=Poster,
+                      out=print) -> bool:
+    """``unseenet-bots profile``: publish one bot's profile now (``--dry-run``: show it)."""
+    if dry_run:
+        prof, pic = bot_profile(bot), bot_picture(bot)
+        out(f"--- {bot.name}: profile\n" + (json.dumps(prof, indent=1, ensure_ascii=False)
+                                           if prof else "(none in the config)"))
+        if pic:
+            out(f"--- {bot.name}: picture, {pic['px']} px, alt {pic.get('alt', '')!r}")
+        return False
+    key = load_key(key_file=bot.key_file, vault=bot.vault, identity=bot.identity,
+                   seed_env=bot.seed_env)
+    async with poster_factory(key, bot.nodes, from_name=bot.from_name, state=key_state(bot),
+                              log=lambda m: out(f"  {bot.name}: {m}")) as p:
+        return await publish_profile(bot, state, p, out, force=True)
+
+
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-c", "--config", type=Path, default=Path("bots.toml"))
@@ -171,6 +284,9 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument("bots", nargs="*", help="only these bots (default: all)")
     r.add_argument("--dry-run", action="store_true", help="show the posts, post nothing")
     sub.add_parser("list", help="list the configured bots")
+    pr = sub.add_parser("profile", help="publish the bots' public profiles now, without posting")
+    pr.add_argument("bots", nargs="*", help="only these bots (default: all)")
+    pr.add_argument("--dry-run", action="store_true", help="show the profiles, publish nothing")
     k = sub.add_parser("new-key", help="make a key for a bot and show its public key")
     k.add_argument("file", type=Path)
     args = p.parse_args(argv)
@@ -196,6 +312,9 @@ def main(argv: list[str] | None = None) -> None:
     failed = False
     for bot in chosen:
         try:
+            if args.cmd == "profile":
+                asyncio.run(profile_bot(bot, state, dry_run=args.dry_run))
+                continue
             asyncio.run(run_bot(bot, state, dry_run=args.dry_run))
         except (PosterError, OSError, ValueError) as exc:
             print(f"{bot.name}: failed: {exc}", file=sys.stderr)

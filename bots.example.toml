@@ -16,6 +16,14 @@ key_file = "~/.config/unseenet-bots/news.key"
 max_per_run = 5
 options = { lang = "en" }
 
+[bots.news.profile]       # the public profile, with the bot mark (draft text)
+about = "Headlines from Wikipedia's *In the news*, each with a link to the article."
+not_affiliated_with = "Wikipedia"
+lang = "en"
+links = { web = "https://en.wikipedia.org/wiki/Portal:Current_events" }
+# picture = "~/.config/unseenet-bots/news.webp"   # 128 px WebP, no metadata
+# picture_alt = "..."
+
 [bots.onthisday]
 source = "wikipedia-onthisday"  # one post a day
 group = "alt.history.onthisday@<owner fingerprint>"
@@ -23,12 +31,28 @@ from_name = "On this day (bot)"
 key_file = "~/.config/unseenet-bots/onthisday.key"
 options = { lang = "en", count = 6 }
 
+[bots.onthisday.profile]       # the public profile, with the bot mark (draft text)
+about = "What happened on this day in history, from Wikipedia - one post a day."
+not_affiliated_with = "Wikipedia"
+lang = "en"
+links = { web = "https://en.wikipedia.org/wiki/Wikipedia:On_this_day/Today" }
+# picture = "~/.config/unseenet-bots/onthisday.webp"   # 128 px WebP, no metadata
+# picture_alt = "..."
+
 [bots.globalvoices]
 source = "globalvoices"         # whole stories, CC BY 3.0
 group = "alt.news.globalvoices@<owner fingerprint>"
 from_name = "Global Voices (bot)"
 key_file = "~/.config/unseenet-bots/globalvoices.key"
 max_per_run = 3
+
+[bots.globalvoices.profile]       # the public profile, with the bot mark (draft text)
+about = "Stories from Global Voices: citizen media and voices from around the world."
+not_affiliated_with = "Global Voices"
+lang = "en"
+links = { web = "https://globalvoices.org/" }
+# picture = "~/.config/unseenet-bots/globalvoices.webp"   # 128 px WebP, no metadata
+# picture_alt = "..."
 
 [bots.theconversation]
 source = "theconversation"      # opening paragraphs + link, CC BY-ND 4.0
@@ -39,6 +63,14 @@ max_per_run = 2
 max_per_day = 8                 # extracts, not the whole feed
 options = { paragraphs = 3 }
 
+[bots.theconversation.profile]       # the public profile, with the bot mark (draft text)
+about = "Articles from The Conversation, written by researchers and academics."
+not_affiliated_with = "The Conversation"
+lang = "en"
+links = { web = "https://theconversation.com/" }
+# picture = "~/.config/unseenet-bots/theconversation.webp"   # 128 px WebP, no metadata
+# picture_alt = "..."
+
 [bots.eff]
 source = "eff"                  # whole posts, CC BY 4.0
 group = "alt.privacy.eff@<owner fingerprint>"
@@ -47,6 +79,14 @@ key_file = "~/.config/unseenet-bots/eff.key"
 max_per_run = 3
 max_age_hours = 96              # EFF posts a few times a week
 
+[bots.eff.profile]       # the public profile, with the bot mark (draft text)
+about = "News from the Electronic Frontier Foundation on privacy and digital rights."
+not_affiliated_with = "the EFF"
+lang = "en"
+links = { web = "https://www.eff.org/deeplinks" }
+# picture = "~/.config/unseenet-bots/eff.webp"   # 128 px WebP, no metadata
+# picture_alt = "..."
+
 [bots.nasa]
 source = "nasa-iotd"            # NASA Image of the Day, not copyrighted
 group = "alt.space.nasa@<owner fingerprint>"
@@ -54,3 +94,11 @@ from_name = "NASA Image of the Day (bot)"
 key_file = "~/.config/unseenet-bots/nasa.key"
 max_per_run = 2
 max_age_hours = 72
+
+[bots.nasa.profile]       # the public profile, with the bot mark (draft text)
+about = "NASA's Image of the Day, with its caption."
+not_affiliated_with = "NASA"
+lang = "en"
+links = { web = "https://www.nasa.gov/image-of-the-day/" }
+# picture = "~/.config/unseenet-bots/nasa.webp"   # 128 px WebP, no metadata
+# picture_alt = "..."
