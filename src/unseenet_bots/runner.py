@@ -61,9 +61,9 @@ MAX_ABOUT = 2048                  # UN-RFC 0022 section 4.1
 
 
 def channel_address(group: str) -> str:
-    """The channel's address in the form every client since 0.4 opens (the newer
-    ``unseenet:<group-id>`` once clients on 0.5 are out, unseenet/unseenet#386)."""
-    return f"unseenet:join?g={group}"
+    """The channel's ``unseenet:<group-id>`` address (UN-RFC 0031 section 3.4), which
+    clients from 0.5 open."""
+    return f"unseenet:{group}"
 
 
 def bot_profile(bot: Bot) -> dict | None:

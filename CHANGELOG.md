@@ -7,6 +7,12 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-25
+
+### Changed
+
+- The bots' profiles link their channel as `unseenet:<group-id>`, the form clients from unseenet 0.5 open (unseenet#386), instead of `unseenet:join?g=`. Profiles are published again on the next run.
+
 ## [0.2.0] - 2026-10-25
 
 For unseenet 0.5 (`unseenet>=0.5,<0.6`); update the nodes first. Bots get profiles, and post pictures where the source's licence allows it.
@@ -49,6 +55,7 @@ README's setup step).
 - `contrib/`: systemd units for a user service and for a dedicated `bots`
   user with an hourly timer.
 
-[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/unseenet/unseenet-bots/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/unseenet/unseenet-bots/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/unseenet/unseenet-bots/releases/tag/v0.1.0
