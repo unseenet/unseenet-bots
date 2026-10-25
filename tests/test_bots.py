@@ -96,7 +96,7 @@ def test_a_bot_profile_has_the_mark_the_footer_and_the_links():
     about = prof["about"]
     assert about.startswith("NASA's Image of the Day")
     assert "Not affiliated with NASA." in about and "comment below each post" in about
-    assert "[alt.space.nasa](unseenet:join?g=alt.space.nasa@aaaaaaaaaaaaaaaa)" in about
+    assert "[alt.space.nasa](unseenet:alt.space.nasa@aaaaaaaaaaaaaaaa)" in about
     assert prof["links"] == [{"kind": "web", "value": "https://www.nasa.gov/image-of-the-day/"}]
     assert prof["lang"] == ["en"]
     assert bot_profile(Bot(name="x", source="eff", group="g@a", from_name="x")) is None
