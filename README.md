@@ -1,12 +1,31 @@
-# unseenet-bots
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/unseenet/unseenet/main/assets/logo-dark.svg">
+    <img src="https://raw.githubusercontent.com/unseenet/unseenet/main/assets/logo-light.svg" alt="Unseenet" width="360">
+  </picture>
+</p>
+
+<h1 align="center">unseenet-bots</h1>
+
+<p align="center"><b>Bots that keep Unseenet channels filled with current content.</b><br>
+News, history, science and space - posted as feeds you can comment on, with credit and licence.</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/unseenet-bots/"><img src="https://img.shields.io/pypi/v/unseenet-bots?label=PyPI" alt="PyPI"></a>
+  <a href="https://github.com/unseenet/unseenet-bots/actions/workflows/tests.yml"><img src="https://github.com/unseenet/unseenet-bots/actions/workflows/tests.yml/badge.svg" alt="tests"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0"></a>
+</p>
+
+> **Pre-alpha.** Nothing is stable yet, and Unseenet has not had a security
+> review. Do not rely on it to protect anyone yet.
+
+## What it is
 
 Bots that keep [Unseenet](https://unseenet.org) channels filled with
 current content, and an example of how to build a bot on the Unseenet
 core library.
 
 **Status:** early. Six sources work, listed below.
-
-## Idea
 
 - One bot is one key, a *poster* in a channel (never the owner), with
   `bot: true` in its profile (UN-RFC 0030 section 6).
@@ -18,7 +37,17 @@ core library.
 - Readers can comment if the channel has `comments: open`
   (UN-RFC 0030).
 
-## Running it
+### Content and licences
+
+Only sources whose licences allow reposting are used, and each post
+credits its source as the licence asks. News agencies whose terms
+forbid redistribution are not used. The first sources are listed in
+issue #1.
+
+Whoever runs a bot is responsible for its content and for following
+the source's licence.
+
+## Run it
 
 ```sh
 pip install unseenet-bots
@@ -64,7 +93,7 @@ with old news.
 Open the channel for comments (*Edit group* → *Readers may comment on
 posts*, UN-RFC 0030) so readers can talk about each post.
 
-## Profiles
+### Profiles
 
 Every bot says it is a bot: each run first publishes its public profile with
 the **bot mark** (UN-RFC 0022), so clients mark its posts - but only when the
@@ -87,7 +116,7 @@ and a link to the channel. `unseenet-bots profile --dry-run` shows the
 profiles; `unseenet-bots profile` publishes them now, without posting. Use
 no source's logo as the picture (trademarks).
 
-## Pictures
+### Pictures
 
 Posts cannot be removed from the network afterwards, so a bot posts a picture
 only where the licence clearly allows it. Per bot, `pictures`:
@@ -107,23 +136,15 @@ NASA and Wikipedia "In the news" sources offer pictures; EFF and Global Voices
 only link to theirs (each picture has its own licence there), and The
 Conversation's are agency pictures, so never.
 
-## Writing a source
+## Develop
+
+### Writing a source
 
 A source is a class with a `name` and `fetch(today) -> list[Item]` in
 `src/unseenet_bots/sources/`. An `Item` has a stable `id` (so nothing is
 posted twice), a `subject` and a markdown `body` that ends with the
 credit line its licence asks for. See `wikipedia.py`, and *Writing a bot*
 in the Unseenet docs for the core API underneath.
-
-## Content and licences
-
-Only sources whose licences allow reposting are used, and each post
-credits its source as the licence asks. News agencies whose terms
-forbid redistribution are not used. The first sources are listed in
-issue #1.
-
-Whoever runs a bot is responsible for its content and for following
-the source's licence.
 
 ## Versions and releases
 
@@ -140,16 +161,14 @@ new `## [X.Y.Z] - YYYY-MM-DD` section, set `__version__` in
 
 ## Part of Unseenet
 
-Unseenet is made in several repositories, each released on its own:
-
 | Repository | What it is |
 |---|---|
 | [unseenet](https://github.com/unseenet/unseenet) | The protocol (UN-RFCs), the core library, the node and the command-line client |
-| [unseenet-tui](https://github.com/unseenet/unseenet-tui) | The terminal client (moving here from unseenet, unseenet#548) |
+| [unseenet-tui](https://github.com/unseenet/unseenet-tui) | The terminal client |
 | [unseenet-gui](https://github.com/unseenet/unseenet-gui) | The graphical client - in a window, booted, or in a browser |
-| [unseenet-portable](https://github.com/unseenet/unseenet-portable) | Builds the portable clients, Terminal and Graphical, with Tor inside (unseenet#549) |
-| [unseenet-bootable](https://github.com/unseenet/unseenet-bootable) | Builds the bootable images, Terminal and Graphical, and later a node image (unseenet#550) |
-| [unseenet-docs](https://github.com/unseenet/unseenet-docs) | The site [unseenet.org](https://unseenet.org), gathering the docs of every repository (unseenet#547) |
+| [unseenet-portable](https://github.com/unseenet/unseenet-portable) | Builds the portable clients, Terminal and Graphical, with Tor inside |
+| [unseenet-bootable](https://github.com/unseenet/unseenet-bootable) | Builds the bootable images, Terminal and Graphical |
+| [unseenet-docs](https://github.com/unseenet/unseenet-docs) | The site [unseenet.org](https://unseenet.org) |
 | [unseenet-entrance](https://github.com/unseenet/unseenet-entrance) | Web entrances: the graphical client in an ordinary browser |
 | [unseenet-gateway](https://github.com/unseenet/unseenet-gateway) | Gateways to other networks: Usenet, Nostr, Matrix |
 | [unseenet-bots](https://github.com/unseenet/unseenet-bots) | Bots that keep channels filled with current content |
@@ -158,7 +177,6 @@ Unseenet is made in several repositories, each released on its own:
 | [unseenet-mcp](https://github.com/unseenet/unseenet-mcp) | An MCP server, so a language model can read and post as you (planning) |
 | [unseenet-demo](https://github.com/unseenet/unseenet-demo) | Demo people, feeds and sites, made with the command-line client |
 
-## Licence
+## License
 
-The code is licensed under the Apache License 2.0. Content posted by
-the bots keeps the licence of its source.
+[Apache License 2.0](LICENSE). The Unseenet logo: CC BY 4.0.
