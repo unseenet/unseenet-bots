@@ -7,6 +7,9 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+- **Posts say their language** (UN-RFC 0052 5a): `Content-Language` from the bot's source
+  (`options.lang`), else a one-language profile; none otherwise.
+
 ## [0.2.1] - 2026-10-25
 
 ### Changed

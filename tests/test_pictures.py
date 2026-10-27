@@ -146,3 +146,31 @@ async def test_posted_with_the_picture_or_a_link(tmp_path, allow):
     assert (b"Blobs: " in raw) is allow
     assert b"Public domain" in raw and b"https://nasa/1" in raw
     server.close()
+
+
+
+def test_the_language_header():
+    """UN-RFC 0052 5a: a bot's posts say its source's language."""
+    from unseenet_bots.runner import language_header
+    assert language_header(Bot(name="a", source="x", group="g", from_name="A", options={"lang": "en"})) == \
+        [("Content-Language", "en")]
+    assert language_header(Bot(name="b", source="x", group="g", from_name="B", profile={"lang": ["da"]})) == \
+        [("Content-Language", "da")]
+    assert language_header(Bot(name="c", source="x", group="g", from_name="C", profile={"lang": ["en", "da"]})) == []
+    assert language_header(Bot(name="d", source="x", group="g", from_name="D")) == []
+
+
+async def test_a_post_says_its_language(tmp_path):
+    try:
+        node, server, manifest, key, addr = await _node_with(None)
+    except TypeError:
+        pytest.skip("this core's node has no blob settings")
+    bot = Bot(name="nasa", source="nasa-iotd", group=manifest.group, from_name="NASA (bot)",
+              nodes=[addr], options={"lang": "en"})
+    async with Poster(key, [addr], tor="none", state=str(tmp_path / "k.state.json")) as p:
+        result = await post_item(p, bot, Item("nasa:2", "A moon", "The caption.\n"), False, print)
+    assert result.ok
+    raw = next(node.store.by_number(manifest.group, n)[1] for n in node.store.numbers(manifest.group)
+               if b"Message-Kind: post" in node.store.by_number(manifest.group, n)[1])
+    assert b"Content-Language: en" in raw
+    server.close()
