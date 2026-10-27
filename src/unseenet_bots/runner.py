@@ -232,6 +232,16 @@ def scale_down(octets: bytes, max_px: int = MAX_PICTURE_PX) -> bytes:
         return octets
 
 
+def language_header(bot: Bot) -> list[tuple[str, str]]:
+    """``Content-Language`` for what a bot posts (UN-RFC 0052 5a): its source's language
+    (``options.lang``), else its profile's when it names one; none when neither says."""
+    lang = (bot.options or {}).get("lang") or bot.profile.get("lang")
+    if isinstance(lang, list):
+        lang = lang[0] if len(lang) == 1 else None
+    lang = (lang or "").strip().lower().split("-")[0]
+    return [("Content-Language", lang)] if 2 <= len(lang) <= 3 and lang.isalpha() else []
+
+
 async def post_item(p, bot: Bot, item: Item, files_ok: bool, out=print, fetch=get_bytes):
     """Post an item, with the pictures its licence allows when the core can, else a
     link to each with its credit; without them if the group or the node takes none."""
@@ -254,14 +264,15 @@ async def post_item(p, bot: Bot, item: Item, files_ok: bool, out=print, fetch=ge
     if files:
         try:
             result = await p.post(bot.group, item.subject, body(True), files=files,
-                                  content_type=MARKDOWN_TYPE)
+                                  content_type=MARKDOWN_TYPE, extra=language_header(bot))
             if result.ok:
                 return result
             out(f"{bot.name}: not posted with its picture "
                 f"({result.refused or result.unreachable}); posting a link instead")
         except PosterError as exc:
             out(f"{bot.name}: picture not posted ({exc}); posting a link instead")
-    return await p.post(bot.group, item.subject, body(False), content_type=MARKDOWN_TYPE)
+    return await p.post(bot.group, item.subject, body(False), content_type=MARKDOWN_TYPE,
+                        extra=language_header(bot))
 
 
 def _path(value: str | None) -> str | None:
