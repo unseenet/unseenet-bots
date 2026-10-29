@@ -24,9 +24,9 @@ jobs:
       image: ghcr.io/unseenet/bots
       test: |
         set -eux
-        docker volume create t
-        docker run --rm -v t:/data "$TEST_IMAGE" && exit 1 || test $? -eq 64     # example config written
-        docker run --rm -v t:/data "$TEST_IMAGE" new-key /data/.config/unseenet-bots/news.key | grep "ed25519:"
-        docker run --rm -v t:/data "$TEST_IMAGE" list | grep "^news "
-        test "$(docker run --rm -v t:/data "$TEST_IMAGE" sh -c 'id -u')" = 10001   # not root
+        docker volume create ci
+        docker run --rm -v ci:/data "$TEST_IMAGE" && exit 1 || test $? -eq 64     # example config written
+        docker run --rm -v ci:/data "$TEST_IMAGE" new-key /data/.config/unseenet-bots/news.key | grep "ed25519:"
+        docker run --rm -v ci:/data "$TEST_IMAGE" list | grep "^news "
+        test "$(docker run --rm -v ci:/data "$TEST_IMAGE" sh -c 'id -u')" = 10001   # not root
         docker run --rm "$TEST_IMAGE" sh -c "tor --version"
