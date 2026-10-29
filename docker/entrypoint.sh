@@ -40,6 +40,12 @@ if [ $# -gt 0 ]; then
     exec unseenet-bots -c "$CONFIG" "$@"
 fi
 
+# the keys ripen in the background meanwhile, to ripen_to / UNSEENET_RIPEN_TO (weeks for 4);
+# it goes on where it was after a restart, and stops by itself at the level
+if [ "${BOTS_RIPEN:-yes}" != no ]; then
+    unseenet-bots -c "$CONFIG" ripen >"$DATA/ripening.log" 2>&1 &
+fi
+
 INTERVAL=${BOTS_INTERVAL:-3600}
 JITTER=${BOTS_JITTER:-900}
 while true; do

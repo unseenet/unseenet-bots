@@ -336,6 +336,30 @@ def _limit(bot: Bot, state: State, now: datetime) -> int:
     return min(bot.max_per_run, left)
 
 
+async def ripen_bots(bots: list[Bot], to: int | None = None, out=print,
+                     poster_factory=Poster) -> None:
+    """Ripen each bot's key, one after the other, to ``to`` - the level from
+    ``service_ripen_to()``: ``ripen_to`` in [defaults], else ``UNSEENET_RIPEN_TO``, else 3
+    (#24, unseenet#740) - publishing ripe@ at each level. Runs for weeks to reach 4, and
+    goes on where it was after a restart: ripen in the background beside the hourly runs
+    (the container does; see "Ripening" in the docs). Keys shared by bots ripen once."""
+    from unseenet.client.runtime import ClientRuntime, service_ripen_to
+    level = service_ripen_to(to)
+    done: set[str] = set()
+    for bot in bots:
+        key = load_key(key_file=bot.key_file, vault=bot.vault, identity=bot.identity,
+                       seed_env=bot.seed_env)
+        if key.key_text in done:
+            continue
+        done.add(key.key_text)
+        out(f"{bot.name}: ripening {key.key_text[:20]}... to level {level}")
+        async with poster_factory(key, bot.nodes, from_name=bot.from_name, state=key_state(bot),
+                                  log=lambda m, n=bot.name: out(f"  {n}: {m}")) as p:
+            s = _session_of(p)
+            await ClientRuntime(s, ripen_to=level).ripen()
+            out(f"{bot.name}: level {s.ripening().level}")
+
+
 async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
                   poster_factory=Poster, out=print, now: datetime | None = None) -> int:
     """Post what is new for one bot. Returns the number of posts made."""
@@ -407,6 +431,9 @@ def main(argv: list[str] | None = None) -> None:
     pr = sub.add_parser("profile", help="publish the bots' public profiles now, without posting")
     pr.add_argument("bots", nargs="*", help="only these bots (default: all)")
     pr.add_argument("--dry-run", action="store_true", help="show the profiles, publish nothing")
+    rp_ = sub.add_parser("ripen", help="ripen the bots' keys to the configured level, in the "
+                                       "background beside the hourly runs (weeks for level 4)")
+    rp_.add_argument("bots", nargs="*", help="only these bots (default: all)")
     k = sub.add_parser("new-key", help="make a key for a bot and show its public key")
     k.add_argument("file", type=Path)
     args = p.parse_args(argv)
@@ -428,6 +455,13 @@ def main(argv: list[str] | None = None) -> None:
     chosen = [b for b in bots if not args.bots or b.name in args.bots]
     if not chosen:
         sys.exit("no such bot")
+    if args.cmd == "ripen":
+        to = defaults.get("ripen_to")
+        try:
+            asyncio.run(ripen_bots(chosen, int(to) if to is not None else None))
+        except (PosterError, OSError, ValueError) as exc:
+            sys.exit(f"ripening stopped: {exc}")
+        return
     state = State(Path(_path(defaults.get("state_file", "~/.local/state/unseenet-bots/state.json"))))
     failed = False
     for bot in chosen:
