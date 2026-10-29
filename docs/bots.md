@@ -136,3 +136,26 @@ The help bot is different: it reads a group and answers in its threads,
 so it is built on the client's `Session`, like the terminal and web
 clients. Its code, with an install script for a server, is
 [unseenet/unseenet-helpbot](https://github.com/unseenet/unseenet-helpbot).
+
+## In Docker
+
+`ghcr.io/unseenet/bots` has the bot runner and Tor, for amd64 and arm64,
+published for releases only and signed with cosign. `bots.toml`, the bots'
+keys and their state are in the volume at `/data` (the home folder inside, so
+`~/.config/unseenet-bots/news.key` in `bots.toml` is
+`/data/.config/unseenet-bots/news.key`). The schedule runs inside the
+container - every hour plus up to a quarter of an hour at random
+(`BOTS_INTERVAL`, `BOTS_JITTER`) - so the host needs no cron or timer.
+
+```sh
+docker run --rm -v bots:/data ghcr.io/unseenet/bots           # writes an example bots.toml
+docker run --rm -v bots:/data ghcr.io/unseenet/bots new-key /data/.config/unseenet-bots/news.key
+docker run --rm -it -v bots:/data ghcr.io/unseenet/bots sh    # edit /data/bots.toml (vi)
+docker run --rm -v bots:/data ghcr.io/unseenet/bots run --dry-run
+docker run -d --name bots -v bots:/data ghcr.io/unseenet/bots # from now on, every hour
+```
+
+With [`compose.yaml`](https://github.com/unseenet/unseenet-bots/blob/main/compose.yaml)
+it runs with a read-only root file system and no capabilities beyond handing
+`/data` to its own user. Any command runs the same way:
+`docker compose run --rm bots profile`.

@@ -7,6 +7,12 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+- **A container image** (#18, unseenet/unseenet#571): `ghcr.io/unseenet/bots` - the
+  runner on the node image, `bots.toml`, keys and state in `/data`, and the schedule
+  inside the container (every hour plus up to 15 minutes at random), so the host needs
+  no cron - and a `compose.yaml`. Published for amd64 and arm64 only for release tags,
+  through the project's shared workflow. See *In Docker* in the docs.
+
 - **Posts say their language** (UN-RFC 0052 5a): `Content-Language` from the bot's source
   (`options.lang`), else a one-language profile; none otherwise.
 

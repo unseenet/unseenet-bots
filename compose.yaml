@@ -1,0 +1,22 @@
+# unseenet-bots with Docker Compose (docs: "In Docker").
+#
+#   docker compose run --rm bots                        # first time: writes /data/bots.toml
+#   docker compose run --rm bots new-key /data/.config/unseenet-bots/news.key
+#   docker compose up -d                                # every hour, from now on
+services:
+  bots:
+    image: ghcr.io/unseenet/bots:latest
+    restart: unless-stopped
+    volumes:
+      - bots:/data                 # bots.toml, keys, state
+    environment:
+      BOTS_INTERVAL: "3600"        # seconds between runs
+      BOTS_JITTER: "900"           # plus up to this many, at random
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, FOWNER, DAC_OVERRIDE]
+    security_opt: [no-new-privileges:true]
+
+volumes:
+  bots:
