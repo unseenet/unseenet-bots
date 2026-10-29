@@ -140,3 +140,44 @@ async def test_the_profile_is_published_once_and_again_when_it_changes(tmp_path)
     await profile_bot(bot, state, dry_run=True, out=out.append)
     assert '"bot": true' in out[0]
     server.close()
+
+
+def test_ripen_bots_takes_each_key_once_to_the_configured_level(monkeypatch):
+    """#24: ripen_to / UNSEENET_RIPEN_TO / 3, each key once, through the Poster's Session."""
+    import asyncio
+    from unseenet.core import crypto
+    from unseenet_bots import runner
+    key = crypto.Identity.generate()
+    monkeypatch.setattr(runner, "load_key", lambda **kw: key)
+    levels = []
+
+    class FakeRuntime:
+        def __init__(self, s, ripen_to):
+            levels.append(ripen_to)
+
+        async def ripen(self):
+            return None
+
+    class FakeSession:
+        def ripening(self):
+            return type("C", (), {"level": 4})()
+
+    class FakePoster:
+        def __init__(self, *a, **k):
+            self.session = FakeSession()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc):
+            return None
+
+    import unseenet.client.runtime as rt
+    monkeypatch.setattr(rt, "ClientRuntime", FakeRuntime)
+    monkeypatch.setenv("UNSEENET_RIPEN_TO", "4")
+    bots = [runner.Bot("a", "x", "g@f", "A", key_file="k"), runner.Bot("b", "x", "g@f", "B", key_file="k")]
+    lines = []
+    asyncio.run(runner.ripen_bots(bots, None, out=lines.append, poster_factory=FakePoster))
+    assert levels == [4]                                  # one key, once
+    asyncio.run(runner.ripen_bots(bots[:1], 2, out=lines.append, poster_factory=FakePoster))
+    assert levels == [4, 2]                               # the config wins

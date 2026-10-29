@@ -7,6 +7,16 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-29
+
+Needs unseenet 0.6 (`unseenet>=0.6,<0.7`): update the nodes first.
+
+- **Ripening to the level you choose** (#24, unseenet#740): `unseenet-bots ripen` ripens
+  every bot's key, one after the other, to `ripen_to` in `[defaults]`, else
+  `UNSEENET_RIPEN_TO`, else level 3, and goes on where it was after a restart. The
+  container runs it in the background beside the hourly runs (`BOTS_RIPEN=no` to turn it
+  off). Level 4 takes two to three weeks of one core, then every post costs about a
+  quarter of the postage. The project's own bots run at 4.
 - **A container image** (#18, unseenet/unseenet#571): `ghcr.io/unseenet/bots` - the
   runner on the node image, `bots.toml`, keys and state in `/data`, and the schedule
   inside the container (every hour plus up to 15 minutes at random), so the host needs
@@ -64,7 +74,8 @@ README's setup step).
 - `contrib/`: systemd units for a user service and for a dedicated `bots`
   user with an hourly timer.
 
-[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/unseenet/unseenet-bots/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/unseenet/unseenet-bots/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/unseenet/unseenet-bots/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/unseenet/unseenet-bots/releases/tag/v0.1.0

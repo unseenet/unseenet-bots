@@ -45,6 +45,17 @@ channel and makes a new one.
   `UNSEENET_VAULT_PASSPHRASE` (`identity=` picks one of its identities);
 - `UNSEENET_SEED`: the seed in hex.
 
+### Ripening
+
+A new key must ripen before it can post (UN-RFC 0025): about ten minutes to
+level 0, which posting does by itself. A key that posts a lot gains by going
+further - level 3 ends the surcharge, and level 4 makes every post about four
+times cheaper, at the price of two to three weeks of one core.
+`unseenet-bots ripen` ripens every bot's key, one after the other, to
+`ripen_to` in `[defaults]` (else `UNSEENET_RIPEN_TO`, else 3), and goes on where
+it was after a restart; run it as a long-running service beside the hourly
+timer. The container does that by itself.
+
 ## Tor and nodes
 
 `Poster(key, nodes=[...], tor=...)`:
