@@ -15,6 +15,8 @@ All notable changes to unseenet-bots are listed here. The format follows
 - **xkcd and Pepper&Carrot** (#40): `xkcd` (CC BY-NC 2.5) with the comic and its title
   text, new or from the archive; `peppercarrot` (CC BY 4.0), an episode as a thread - the
   first post and replies of four pages each - with the episode's credits.
+- **arXiv** (#39): `arxiv`, new papers in a category as one daily digest (titles, authors,
+  links), or one post per paper with its abstract (`per_paper`); metadata only (CC0).
 - An item can have follow-ups posted as replies in its thread; `picture_px` scales a bot's
   pictures down.
 

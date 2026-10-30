@@ -290,13 +290,14 @@ def _registry() -> dict[str, type]:
     from .feeds import (EFF, Amnesty, GlobalVoices, Headlines, HumanRightsWatch, Mongabay,
                         NasaImageOfTheDay, OurWorldInData, TheConversation, UNNews)
     from .cisa import CisaAdvisories, CisaKev
+    from .arxiv import Arxiv
     from .comics import PepperCarrot, Xkcd
     from .hackernews import HackerNews
     from .wikipedia import InTheNews, OnThisDay
     return {cls.name: cls for cls in (InTheNews, OnThisDay, GlobalVoices, TheConversation,
                                       EFF, NasaImageOfTheDay, UNNews, Amnesty, HumanRightsWatch,
                                       Mongabay, Headlines, HackerNews, CisaAdvisories, CisaKev,
-                                      OurWorldInData, Xkcd, PepperCarrot)}
+                                      OurWorldInData, Xkcd, PepperCarrot, Arxiv)}
 
 
 def has_archive(name: str) -> bool:
