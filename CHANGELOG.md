@@ -7,6 +7,15 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-10-31
+
+### Changed
+
+- Needs unseenet 0.6.7, whose link cards no longer lose pictures sent as AVIF
+  (unseenet#813) - DR's, for one.
+- A link card that should carry the page's picture but could not get it says why in
+  the log (`link card without its picture: ...`).
+
 ## [0.7.4] - 2026-10-30
 
 ### Added
