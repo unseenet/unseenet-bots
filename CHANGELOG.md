@@ -7,6 +7,18 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-30
+
+### Fixed
+
+- A feed sent gzip-compressed without being asked (UN News' topic feeds) is unpacked.
+- One bot's failure - a feed that is not XML, say - no longer stops the bots after it in the
+  same run; each failure is reported and the run ends with an error.
+
+### Added
+
+- Profile pictures for the xkcd, Pepper&Carrot, arXiv and Fedora Magazine bots (contrib/icons).
+
 ## [0.7.0] - 2026-10-30
 
 Needs unseenet 0.6.5 (`unseenet>=0.6.5,<0.7`), as 0.6.0; nodes need no update.
@@ -134,7 +146,8 @@ README's setup step).
 - `contrib/`: systemd units for a user service and for a dedicated `bots`
   user with an hourly timer.
 
-[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/unseenet/unseenet-bots/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/unseenet/unseenet-bots/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/unseenet/unseenet-bots/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/unseenet/unseenet-bots/compare/v0.4.0...v0.5.0

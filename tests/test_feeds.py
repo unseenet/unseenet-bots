@@ -126,3 +126,42 @@ def test_old_items_are_skipped_and_daily_limit(tmp_path):
         state.mark("tc", f"i{n}", f"<m{n}>", NOW - timedelta(hours=n))
     assert _limit(bot, state, NOW) == 1
     assert _limit(bot, state, NOW + timedelta(days=1, hours=3)) == 3
+
+
+def test_gzip_sent_unasked_is_unpacked(monkeypatch):
+    import gzip
+    import io
+    import urllib.request
+
+    from unseenet_bots.sources import get_bytes
+
+    class Resp(io.BytesIO):
+        headers = {"Content-Encoding": "gzip"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return None
+    monkeypatch.setattr(urllib.request, "urlopen", lambda req, timeout: Resp(gzip.compress(b"<rss/>")))
+    assert get_bytes("https://e.org/f") == b"<rss/>"
+
+
+def test_one_bot_failing_does_not_stop_the_others(tmp_path, monkeypatch, capsys):
+    import pytest
+
+    from unseenet_bots import runner
+    conf = tmp_path / "bots.toml"
+    conf.write_text(f'[defaults]\nstate_file = "{tmp_path}/s.json"\n'
+                    '[bots.a]\nsource = "eff"\ngroup = "g@x"\n[bots.b]\nsource = "eff"\ngroup = "g@x"\n')
+    ran = []
+
+    async def run_bot(bot, state, dry_run=False):
+        ran.append(bot.name)
+        if bot.name == "a":
+            import xml.etree.ElementTree as ET
+            raise ET.ParseError("not well-formed")
+    monkeypatch.setattr(runner, "run_bot", run_bot)
+    with pytest.raises(SystemExit):
+        runner.main(["-c", str(conf), "run"])
+    assert ran == ["a", "b"] and "a: failed: ParseError" in capsys.readouterr().err

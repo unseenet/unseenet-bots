@@ -635,8 +635,8 @@ def main(argv: list[str] | None = None) -> None:
                 asyncio.run(profile_bot(bot, state, dry_run=args.dry_run))
                 continue
             asyncio.run(run_bot(bot, state, dry_run=args.dry_run))
-        except (PosterError, OSError, ValueError) as exc:
-            print(f"{bot.name}: failed: {exc}", file=sys.stderr)
+        except Exception as exc:  # noqa: BLE001 - one bot's trouble must not stop the others
+            print(f"{bot.name}: failed: {type(exc).__name__}: {exc}", file=sys.stderr)
             failed = True
     if failed:
         sys.exit(1)

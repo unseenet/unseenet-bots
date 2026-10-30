@@ -107,8 +107,15 @@ def get_bytes(url: str, accept: str = "*/*", timeout: float = 30.0) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": accept})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         data = resp.read(MAX_DOWNLOAD + 1)
+        encoding = (resp.headers.get("Content-Encoding") or "").lower()
     if len(data) > MAX_DOWNLOAD:
         raise ValueError(f"{url}: larger than {MAX_DOWNLOAD} bytes")
+    # some servers send gzip although we did not ask for it (UN News' topic feeds)
+    if encoding == "gzip" or data[:2] == b"\x1f\x8b":
+        import gzip
+        data = gzip.decompress(data)
+        if len(data) > MAX_DOWNLOAD:
+            raise ValueError(f"{url}: larger than {MAX_DOWNLOAD} bytes unpacked")
     return data
 
 
