@@ -7,9 +7,13 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-30
+
+Needs unseenet 0.6.5 (`unseenet>=0.6.5,<0.7`), which makes the link cards; nodes need no update for it.
+
 ### Added
 
-- **Link previews** (#27, UN-RFC 0059; needs unseenet with `Poster.make_card`, unseenet#797):
+- **Link previews** (#27, UN-RFC 0059; needs unseenet 0.6.5):
   a post from a feed gets a link card for the article it comes from, made over Tor. The
   page's picture goes on the card only with `pictures = "yes"` and no picture of the item's
   own; else the card goes without it. `cards = "no"` leaves them out; a page that does not
@@ -82,7 +86,8 @@ README's setup step).
 - `contrib/`: systemd units for a user service and for a dedicated `bots`
   user with an hourly timer.
 
-[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/unseenet/unseenet-bots/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/unseenet/unseenet-bots/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/unseenet/unseenet-bots/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/unseenet/unseenet-bots/compare/v0.1.0...v0.2.0
