@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel><title>Example NGO feed</title>
+<item><title>Made-up release</title><link>https://example.org/news/1</link>
+<dc:creator>Example Org</dc:creator><pubDate>Sun, 18 Oct 2026 08:00:00 +0000</pubDate>
+<guid isPermaLink="false">https://example.org/?p=1</guid>
+<description>Short.</description>
+<content:encoded><![CDATA[<p>Click to expand Image A made-up caption. © 2026 Someone Else</p><p>First paragraph.</p><figure><img src="a.jpg"></figure><p>Second paragraph.</p><p>The post <a href="https://example.org/news/1">Made-up release</a> appeared first on <a href="https://example.org">Example</a>.</p>]]></content:encoded>
+<enclosure url="https://example.org/pic.jpg" type="image/jpeg" length="1"/></item>
+<item><title>Made-up feature</title><link>https://example.org/news/2</link>
+<dc:creator><![CDATA[ Ana Writer ]]></dc:creator><pubDate>Sun, 18 Oct 2026 09:00:00 +0000</pubDate>
+<guid isPermaLink="false">https://example.org/?p=2</guid>
+<description>Opening words [&#8230;]</description>
+<content:encoded><![CDATA[ OPENING, Place — The opening of a feature that stops mid…This article was originally published on Mongabay ]]></content:encoded></item>
+</channel></rss>

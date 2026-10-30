@@ -284,10 +284,12 @@ def clip(markdown: str, limit: int, more: str) -> str:
 
 
 def _registry() -> dict[str, type]:
-    from .feeds import EFF, GlobalVoices, NasaImageOfTheDay, TheConversation, UNNews
+    from .feeds import (EFF, Amnesty, GlobalVoices, HumanRightsWatch, Mongabay, NasaImageOfTheDay,
+                        TheConversation, UNNews)
     from .wikipedia import InTheNews, OnThisDay
     return {cls.name: cls for cls in (InTheNews, OnThisDay, GlobalVoices, TheConversation,
-                                      EFF, NasaImageOfTheDay, UNNews)}
+                                      EFF, NasaImageOfTheDay, UNNews, Amnesty, HumanRightsWatch,
+                                      Mongabay)}
 
 
 def get_source(name: str, **options) -> Source:

@@ -85,6 +85,9 @@ from the web, not over Tor.
 | `eff` | whole posts from EFF's Deeplinks blog | CC BY 4.0 |
 | `nasa-iotd` | NASA's Image of the Day: the caption and a link to the picture | not copyrighted |
 | `un-news` | UN News: each story's summary and a link to the whole story; never pictures, so run it with `pictures = "no"`. The UN asks to be told that you carry it | credit, and tell the UN |
+| `amnesty` | whole news items from Amnesty International, without pictures | CC BY-NC-ND 4.0 |
+| `hrw` | whole news items from Human Rights Watch, without pictures or captions | CC BY-NC-ND 4.0 |
+| `mongabay` | the feed's opening of each Mongabay article, and a link to the rest; use `max_per_day` | Mongabay's republishing guidelines |
 
 Images are left out of every post, because they often have licences of
 their own; each post links to the original. Only items from the last two
@@ -139,7 +142,7 @@ Conversation's are agency pictures, so never.
 
 ### Link previews
 
-A post from a feed (NASA, EFF, Global Voices, The Conversation, UN News) gets a link
+A post from a feed (NASA, EFF, Global Voices, The Conversation, UN News, Amnesty, HRW, Mongabay) gets a link
 card for the article it comes from (UN-RFC 0059): the site's icon, domain,
 title and description, made once over Tor when it is posted, so readers fetch
 nothing. The page's own picture goes on the card only where the bot posts
