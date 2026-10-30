@@ -225,3 +225,11 @@ from_name = "Pepper&Carrot (bot)"
 key_file = "~/.config/unseenet-bots/peppercarrot.key"
 pictures = "yes"
 picture_px = 1000
+
+[bots.arxiv-cr]
+source = "arxiv"                # metadata only (CC0): a daily digest of new papers
+group = "alt.science.arxiv.cs-cr@<owner fingerprint>"
+from_name = "arXiv cs.CR (bot)"
+key_file = "~/.config/unseenet-bots/arxiv-cr.key"
+max_per_run = 1
+options = { category = "cs.CR" }

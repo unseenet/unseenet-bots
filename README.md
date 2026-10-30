@@ -95,6 +95,7 @@ from the web, not over Tor.
 | `owid` | Our World in Data's Data Insights, with the chart when it is OWID's own (`pictures = "check"`) | CC BY 4.0 |
 | `xkcd` | xkcd's newest comic with its picture and title text; also from the archive (`mode = "archive"`); needs `pictures = "yes"` | CC BY-NC 2.5 |
 | `peppercarrot` | a Pepper&Carrot episode as a thread (the first post and replies, four pages each), with the episode's credits; best with `mode = "archive"`, `pictures = "yes"` and `picture_px = 1000` | CC BY 4.0 |
+| `arxiv` | new arXiv papers in a category (`options = { category = "cs.CR" }`): one daily digest with titles and authors, or with `per_paper = true` each paper with its abstract; metadata only, never the paper | CC0 (metadata) |
 
 Images are left out of every post, because they often have licences of
 their own; each post links to the original. Only items from the last two
