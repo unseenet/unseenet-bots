@@ -6,7 +6,7 @@ from pathlib import Path
 from unseenet_bots.runner import Bot, State, _limit, new_items
 from unseenet_bots.sources import article_markdown, clip
 from unseenet_bots.sources.feeds import (EFF, GlobalVoices, NasaImageOfTheDay, TheConversation,
-                                         parse_feed)
+                                         UNNews, parse_feed)
 
 DATA = Path(__file__).parent / "data"
 RSS = (DATA / "rss.xml").read_bytes()
@@ -57,6 +57,21 @@ def test_nasa_links_the_picture():
     item = NasaImageOfTheDay().fetch_items(RSS)[1]
     assert "[See the picture](https://example.org/pic.jpg)" in item.body
     assert "does not endorse" in item.body
+
+
+def test_un_news_summary_link_and_no_pictures():
+    from unseenet_bots.sources import get_source
+    items = UNNews().fetch_items((DATA / "un.xml").read_bytes())
+    assert len(items) == 1                       # the one without a summary is skipped
+    item = items[0]
+    assert item.subject == "Made-up story about & things"
+    assert item.body.startswith("A made-up summary with a space.\n")
+    link = "https://news.un.org/en/story/2026/10/1000002"     # the guid, not the redirect
+    assert item.link == link and item.id == "un:" + link
+    assert f"[Read the whole story on UN News]({link})" in item.body
+    assert "not affiliated with or endorsed by the United Nations" in item.body
+    assert item.pictures == [] and "agency-photo" not in item.body
+    assert isinstance(get_source("un-news"), UNNews)
 
 
 def test_clip_keeps_whole_paragraphs():

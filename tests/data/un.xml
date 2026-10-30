@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xml:base="https://news.un.org/en"><channel><title>Example UN feed</title>
+<item><title>Made-up story about &amp; things</title>
+<link>https://news.un.org/feed/view/en/story/2026/10/1000002</link>
+<description>A made-up summary with a&amp;nbsp;space.&amp;nbsp;</description>
+<enclosure url="https://example.org/agency-photo.jpg" length="1" type="image/jpeg"/>
+<guid isPermaLink="true">https://news.un.org/en/story/2026/10/1000002</guid>
+<pubDate>Sun, 18 Oct 2026 12:00:00 +0000</pubDate></item>
+<item><title>Empty one</title><link>https://news.un.org/feed/view/en/story/2026/10/1000001</link>
+<description></description><guid isPermaLink="true">https://news.un.org/en/story/2026/10/1000001</guid>
+<pubDate>Sat, 17 Oct 2026 12:00:00 +0000</pubDate></item>
+</channel></rss>

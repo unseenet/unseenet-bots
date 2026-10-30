@@ -11,7 +11,10 @@ and links to the original - as each publisher asks:
 - EFF Deeplinks: CC BY 4.0, the whole post;
 - NASA Image of the Day: NASA's own text and images are not copyrighted
   (https://www.nasa.gov/nasa-brand-center/images-and-media/); the post says
-  NASA does not endorse it.
+  NASA does not endorse it;
+- UN News: news material may be used with credit when the UN is told
+  (https://unognewsroom.org/copyright), so the feed's summary and a link;
+  never its pictures (UN Photo needs written permission for the web).
 
 Images are left out (they often have licences of their own); each post links
 to the original, and NASA's picture is linked.
@@ -209,3 +212,29 @@ class NasaImageOfTheDay(FeedSource):
         return Item(id="nasa:" + entry["id"], subject=_subject(entry["title"]),
                     body="\n".join(lines) + "\n", published=entry["published"], pictures=pics,
                     link=entry["link"])
+
+
+class UNNews(FeedSource):
+    """UN News: the feed's own short summary of each story, a link to the whole
+    story and a credit line. The UN allows news material "as long as the
+    appropriate credit is given and the United Nations is advised"
+    (https://unognewsroom.org/copyright); the project has told the UN. No
+    pictures: UN Photo needs written permission for the web and many pictures
+    are from other agencies, so run this source with ``pictures = "no"``."""
+
+    name = "un-news"
+    url = "https://news.un.org/feed/subscribe/en/news/all/rss.xml"
+
+    def item(self, entry):
+        summary = " ".join(html_to_text(entry["summary"]).split())
+        # the feed links through a redirect; the guid is the story's own address
+        link = entry["id"] if entry["id"].startswith("https://news.un.org/") else entry["link"]
+        if not summary or not link:
+            return None
+        when = _when(entry)
+        lines = [summary, "", f"**[Read the whole story on UN News]({link})**", "", "---",
+                 f"From UN News (https://news.un.org/en/){', ' + when if when else ''}: the "
+                 "story's summary, unchanged except as plain text. Unseenet is not affiliated "
+                 "with or endorsed by the United Nations."]
+        return Item(id="un:" + link, subject=_subject(entry["title"]),
+                    body="\n".join(lines) + "\n", published=entry["published"], link=link)

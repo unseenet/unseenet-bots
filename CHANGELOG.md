@@ -7,6 +7,12 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **UN News** (#30): source `un-news`, the summary of each UN News story with a link to the
+  whole story and a credit line. Never pictures (UN Photo needs written permission for the
+  web), so run it with `pictures = "no"`; the UN asks to be told that you carry it.
+
 ## [0.4.0] - 2026-10-30
 
 Needs unseenet 0.6.5 (`unseenet>=0.6.5,<0.7`), which makes the link cards; nodes need no update for it.
