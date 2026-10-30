@@ -53,6 +53,7 @@ class Bot:
     nodes: list[str] | None = None
     profile: dict = field(default_factory=dict)    # [bots.X.profile]: about, links, lang, picture
     pictures: str = "no"            # "yes", "check" or "no": pictures on posts (#7)
+    cards: bool = True              # a link card for the item's page (#27, UN-RFC 0059)
 
 
 PROFILE_FOOTER = ("An automatic channel run by the [Unseenet](https://unseenet.org) project - "
@@ -156,7 +157,8 @@ def load_config(path: Path) -> tuple[dict, list[Bot]]:
                 max_age_hours=float(b.get("max_age_hours", 48)),
                 nodes=b.get("nodes", defaults.get("nodes")),
                 profile=b.get("profile", {}),
-                pictures=_pictures_rule(name, b.get("pictures", "no"))))
+                pictures=_pictures_rule(name, b.get("pictures", "no")),
+                cards=_cards_rule(name, b.get("cards", "yes"))))
         except KeyError as exc:
             raise SystemExit(f"bot {name}: missing {exc}") from exc
     return defaults, bots
@@ -168,6 +170,14 @@ def _pictures_rule(name: str, value) -> str:
     return value
 
 
+def _cards_rule(name: str, value) -> bool:
+    if value in (True, "yes"):
+        return True
+    if value in (False, "no"):
+        return False
+    raise SystemExit(f"bot {name}: cards is yes or no")
+
+
 # --- pictures on posts (#7): only where the licence clearly allows it ----------------
 
 MAX_PICTURE_PX = 1600               # scaled down: a picture for reading, not for printing
@@ -177,6 +187,38 @@ def core_posts_files(poster_factory=Poster) -> bool:
     """Whether this core's Poster posts files (unseenet 0.5)."""
     cls = poster_factory if isinstance(poster_factory, type) else Poster
     return "files" in inspect.signature(cls.post).parameters
+
+
+def core_makes_cards(poster_factory=Poster) -> bool:
+    """Whether this core's Poster makes link cards (unseenet 0.6, UN-RFC 0059)."""
+    cls = poster_factory if isinstance(poster_factory, type) else Poster
+    return hasattr(cls, "make_card")
+
+
+async def item_card(p, bot: Bot, item: Item, out=print):
+    """The link card for the item's page (#27, UN-RFC 0059), made over Tor, or None.
+    Its picture belongs to the page and has a licence of its own: it stays only where
+    the bot posts what its source vouches for (``pictures = "yes"``) and the item brings
+    no picture of its own; else the card goes without one."""
+    if not bot.cards or not item.link:
+        return None
+    try:
+        card = await p.make_card(item.link, language=_lang(bot) or "en")
+    except (PosterError, OSError, ValueError) as exc:
+        out(f"{bot.name}: no link card: {exc}")
+        return None
+    if not card.title.strip():
+        out(f"{bot.name}: no link card for {item.link}: {card.note or 'no title'}")
+        return None
+    if bot.pictures != "yes" or item.pictures:
+        card.picture = None
+    return card
+
+
+def _lang(bot: Bot) -> str:
+    """The bot's language, as ``language_header`` gives it, or ''."""
+    head = language_header(bot)
+    return head[0][1] if head else ""
 
 
 def allowed_pictures(bot: Bot, item: Item, out=print) -> list[tuple[Picture, str, str]]:
@@ -242,9 +284,12 @@ def language_header(bot: Bot) -> list[tuple[str, str]]:
     return [("Content-Language", lang)] if 2 <= len(lang) <= 3 and lang.isalpha() else []
 
 
-async def post_item(p, bot: Bot, item: Item, files_ok: bool, out=print, fetch=get_bytes):
+async def post_item(p, bot: Bot, item: Item, files_ok: bool, out=print, fetch=get_bytes,
+                    cards_ok: bool = False):
     """Post an item, with the pictures its licence allows when the core can, else a
-    link to each with its credit; without them if the group or the node takes none."""
+    link to each with its credit; without them if the group or the node takes none.
+    With ``cards_ok``, a link card for the item's page goes with it (#27)."""
+    card = await item_card(p, bot, item, out) if cards_ok else None
     pics = allowed_pictures(bot, item, out)
     files = []
     if pics and files_ok:
@@ -261,16 +306,25 @@ async def post_item(p, bot: Bot, item: Item, files_ok: bool, out=print, fetch=ge
         lines = [credit_line(pic, lic, author, attached) for pic, lic, author in pics]
         return item.body.rstrip("\n") + "\n\n" + "\n\n".join(lines) + "\n"
 
-    if files:
+    if files or (card is not None and card.picture is not None):
         try:
-            result = await p.post(bot.group, item.subject, body(True), files=files,
-                                  content_type=MARKDOWN_TYPE, extra=language_header(bot))
+            result = await p.post(bot.group, item.subject, body(bool(files)), files=files or None,
+                                  content_type=MARKDOWN_TYPE, extra=language_header(bot),
+                                  **({"card": card} if card is not None else {}))
             if result.ok:
                 return result
             out(f"{bot.name}: not posted with its picture "
                 f"({result.refused or result.unreachable}); posting a link instead")
         except PosterError as exc:
             out(f"{bot.name}: picture not posted ({exc}); posting a link instead")
+        if card is not None:
+            card.picture = None                    # where files go nowhere, the card goes bare
+    if card is not None:
+        try:
+            return await p.post(bot.group, item.subject, body(False), content_type=MARKDOWN_TYPE,
+                                extra=language_header(bot), card=card)
+        except PosterError as exc:
+            out(f"{bot.name}: link card not posted ({exc}); posting without it")
     return await p.post(bot.group, item.subject, body(False), content_type=MARKDOWN_TYPE,
                         extra=language_header(bot))
 
@@ -381,6 +435,10 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
             out(f"--- {bot.name}: would publish its profile first\n{prof.get('about', '')}")
         for item in new_items(items, state.posted(bot.name), set(), limit, now, bot.max_age_hours):
             out(f"--- {bot.name} -> {bot.group}\nSubject: {item.subject}\n\n{item.body}")
+            if bot.cards and item.link:
+                out(f"--- {bot.name}: link card for {item.link}"
+                    + (" (with the page's picture)" if bot.pictures == "yes" and not item.pictures
+                       else " (without a picture)"))
         return 0
     key = load_key(key_file=bot.key_file, vault=bot.vault, identity=bot.identity,
                    seed_env=bot.seed_env)
@@ -390,9 +448,10 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
         await publish_profile(bot, state, p, out)
         recent = {subject for _, subject in await p.recent_threads(bot.group)}
         files_ok = bot.pictures != "no" and core_posts_files(poster_factory)
+        cards_ok = bot.cards and core_makes_cards(poster_factory)
         for item in new_items(items, state.posted(bot.name), recent, limit, now, bot.max_age_hours):
             # Markdown (Item.body), with the pictures its licence allows (#7)
-            result = await post_item(p, bot, item, files_ok, out)
+            result = await post_item(p, bot, item, files_ok, out, cards_ok=cards_ok)
             if result.ok:
                 state.mark(bot.name, item.id, result.message_id, now)
                 state.save()                  # after every post: a crash posts nothing twice

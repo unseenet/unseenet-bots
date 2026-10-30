@@ -7,6 +7,14 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Link previews** (#27, UN-RFC 0059; needs unseenet with `Poster.make_card`, unseenet#797):
+  a post from a feed gets a link card for the article it comes from, made over Tor. The
+  page's picture goes on the card only with `pictures = "yes"` and no picture of the item's
+  own; else the card goes without it. `cards = "no"` leaves them out; a page that does not
+  answer gives no card, and the post goes anyway. `run --dry-run` shows the card to be made.
+
 ## [0.3.0] - 2026-10-29
 
 Needs unseenet 0.6 (`unseenet>=0.6,<0.7`): update the nodes first.

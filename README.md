@@ -136,6 +136,17 @@ NASA and Wikipedia "In the news" sources offer pictures; EFF and Global Voices
 only link to theirs (each picture has its own licence there), and The
 Conversation's are agency pictures, so never.
 
+### Link previews
+
+A post from a feed (NASA, EFF, Global Voices, The Conversation) gets a link
+card for the article it comes from (UN-RFC 0059): the site's icon, domain,
+title and description, made once over Tor when it is posted, so readers fetch
+nothing. The page's own picture goes on the card only where the bot posts
+what its source vouches for (`pictures = "yes"`) and the item brings no
+picture of its own; elsewhere the card goes without it, since the picture has
+a licence of its own. `cards = "no"` on a bot leaves the cards out. A page
+that does not answer over Tor gives no card; the post goes all the same.
+
 ## Develop
 
 ### Writing a source
