@@ -155,7 +155,7 @@ posts only the headline as a link, where it is from, and the discussion when the
 is one (Hacker News, Lobsters, a site's comments): the runner writes the post itself,
 so nothing of the source's text or pictures gets in, and links lose their `utm_*`
 tracking. The link card then keeps only the page's title, site and icon - not its
-description or picture. The `headlines` and `hackernews` sources run only in this mode.
+description, and its picture only with `card_picture = "yes"`. The `headlines` and `hackernews` sources run only in this mode.
 
 ```toml
 [bots.lobsters]

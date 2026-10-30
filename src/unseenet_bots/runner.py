@@ -299,8 +299,9 @@ async def item_card(p, bot: Bot, item: Item, out=print):
     if not card.title.strip():
         out(f"{bot.name}: no link card for {item.link}: {card.note or 'no title'}")
         return None
-    keep = (bot.pictures == "yes" or bot.card_picture) and not item.pictures
-    if not keep or bot.mode == "headlines":
+    keep = (bot.card_picture or (bot.pictures == "yes" and bot.mode != "headlines")) \
+        and not item.pictures
+    if not keep:
         card.picture = None
     if bot.mode == "headlines":
         card.desc = ""                    # the publisher's text: only title, site and icon
@@ -540,7 +541,8 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
                 out(f"--- {bot.name}: and {len(item.follow_ups)} more part(s) as replies in its thread")
             if bot.cards and item.link:
                 out(f"--- {bot.name}: link card for {item.link}"
-                    + (" (title, site and icon only)" if bot.mode == "headlines"
+                    + (" (title, site and icon" + (" and the page's preview picture)"
+                       if bot.card_picture else " only)") if bot.mode == "headlines"
                        else " (with the page's picture)" if (bot.pictures == "yes" or bot.card_picture)
                        and not item.pictures else " (without a picture)"))
         return 0

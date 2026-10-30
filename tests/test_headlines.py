@@ -116,4 +116,7 @@ def test_card_picture_keeps_the_page_preview_only_when_chosen():
     assert asyncio.run(item_card(P(), off, item, out=lambda m: None)).picture is None
     assert asyncio.run(item_card(P(), on, item, out=lambda m: None)).picture is not None
     head = Bot(name="h", source="headlines", group="g", from_name="h", mode="headlines", card_picture=True)
-    assert asyncio.run(item_card(P(), head, item, out=lambda m: None)).picture is None
+    card = asyncio.run(item_card(P(), head, item, out=lambda m: None))
+    assert card.picture is not None and card.desc == ""          # the picture, never the text
+    plain = Bot(name="h", source="headlines", group="g", from_name="h", mode="headlines", pictures="yes")
+    assert asyncio.run(item_card(P(), plain, item, out=lambda m: None)).picture is None

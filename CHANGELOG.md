@@ -7,6 +7,13 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-10-30
+
+### Changed
+
+- `card_picture = "yes"` works in headlines mode too: the card shows the page's title, site,
+  icon and preview picture, still never its description.
+
 ## [0.7.2] - 2026-10-30
 
 ### Added
@@ -154,7 +161,8 @@ README's setup step).
 - `contrib/`: systemd units for a user service and for a dedicated `bots`
   user with an hourly timer.
 
-[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.7.2...HEAD
+[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.7.3...HEAD
+[0.7.3]: https://github.com/unseenet/unseenet-bots/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/unseenet/unseenet-bots/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/unseenet/unseenet-bots/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/unseenet/unseenet-bots/compare/v0.6.0...v0.7.0
