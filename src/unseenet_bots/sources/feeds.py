@@ -238,3 +238,88 @@ class UNNews(FeedSource):
                  "with or endorsed by the United Nations."]
         return Item(id="un:" + link, subject=_subject(entry["title"]),
                     body="\n".join(lines) + "\n", published=entry["published"], link=link)
+
+
+def _ngo_body(entry: dict) -> str:
+    """The text without picture captions ("Click to expand Image ...") or WordPress's
+    "The post ... appeared first on ..." footer."""
+    return "\n\n".join(p for p in paragraphs(article_markdown(entry["html"], entry["link"]))
+                       if not p.startswith(("Click to expand Image", "The post [")))
+
+
+def _byline(entry: dict, org: str) -> str:
+    """"by <author>" unless the feed names only the organisation itself."""
+    who = " ".join((entry.get("author") or "").split())
+    return f" by {who}" if who and who != org else ""
+
+
+class Amnesty(FeedSource):
+    """Amnesty International's news, whole: their own material is CC BY-NC-ND 4.0
+    (https://www.amnesty.org/en/about-us/permissions/); pictures credited to others are
+    not, and all pictures are left out. Unchanged but for plain text and markdown."""
+
+    name = "amnesty"
+    url = "https://www.amnesty.org/en/feed/"
+
+    def item(self, entry):
+        body = _ngo_body(entry)
+        if not body:
+            return None
+        more = f"*The rest is on [Amnesty International]({entry['link']}).*"
+        lines = [f"*Published{_byline(entry, 'Amnesty International')} on "
+                 f"[Amnesty International]({entry['link']})"
+                 f"{', ' + _when(entry) if _when(entry) else ''}.*", "",
+                 clip(body, MAX_BODY, more), "", "---",
+                 "© Amnesty International, under CC BY-NC-ND 4.0 "
+                 "(https://creativecommons.org/licenses/by-nc-nd/4.0/): unchanged except as plain "
+                 "text and markdown, pictures left out. Amnesty International does not endorse "
+                 "this post or Unseenet."]
+        return Item(id="amnesty:" + entry["id"], subject=_subject(entry["title"]),
+                    body="\n".join(lines) + "\n", published=entry["published"], link=entry["link"])
+
+
+class HumanRightsWatch(FeedSource):
+    """Human Rights Watch's news, whole: CC BY-NC-ND 4.0
+    (https://www.hrw.org/permissions). The pictures and their captions are left out."""
+
+    name = "hrw"
+    url = "https://www.hrw.org/rss/news"
+
+    def item(self, entry):
+        body = _ngo_body(entry)
+        if not body:
+            return None
+        more = f"*The rest is on [Human Rights Watch]({entry['link']}).*"
+        lines = [f"*Published{_byline(entry, 'Human Rights Watch')} on "
+                 f"[Human Rights Watch]({entry['link']})"
+                 f"{', ' + _when(entry) if _when(entry) else ''}.*", "",
+                 clip(body, MAX_BODY, more), "", "---",
+                 "© Human Rights Watch, under CC BY-NC-ND 4.0 "
+                 "(https://creativecommons.org/licenses/by-nc-nd/4.0/): unchanged except as plain "
+                 "text and markdown, pictures and captions left out. Human Rights Watch does not "
+                 "endorse this post or Unseenet."]
+        return Item(id="hrw:" + entry["id"], subject=_subject(entry["title"]),
+                    body="\n".join(lines) + "\n", published=entry["published"], link=entry["link"])
+
+
+class Mongabay(FeedSource):
+    """Mongabay's conservation news: the feed's own opening of each article, unchanged,
+    with "Read the full article on Mongabay", as their republishing guidelines allow
+    (https://news.mongabay.com/copyright/creative-commons/). No pictures."""
+
+    name = "mongabay"
+    url = "https://news.mongabay.com/feed/"
+
+    def item(self, entry):
+        opening = " ".join(html_to_text(entry["html"] or entry["summary"]).split())
+        opening = opening.split("This article was originally published on Mongabay")[0]
+        opening = opening.removesuffix("[…]").removesuffix("[...]").rstrip()
+        if not opening:
+            return None
+        lines = ([f"*By {' '.join(entry['author'].split())}*", ""] if entry["author"] else []) + [
+            opening + (" …" if not opening.endswith((".", "”", "\"", "?", "!", "…")) else ""), "",
+            f"**[Read the full article on Mongabay]({entry['link']})**", "", "---",
+            "From Mongabay (https://news.mongabay.com): the opening of the article, unchanged "
+            "except as plain text. Mongabay does not endorse this post or Unseenet."]
+        return Item(id="mongabay:" + entry["id"], subject=_subject(entry["title"]),
+                    body="\n".join(lines) + "\n", published=entry["published"], link=entry["link"])

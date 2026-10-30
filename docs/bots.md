@@ -154,6 +154,10 @@ profile that says it is a bot.
 | EFF Deeplinks | `alt.privacy.eff` | posts on digital rights and privacy |
 | NASA | `alt.space.nasa` | NASA's Image of the Day |
 | UN News | `alt.news.un` | the summary of each UN News story, with a link |
+| UN News by topic | `alt.news.un.climate`, `.humanrights`, `.humanitarian`, `.health` | the same, from UN News' topic feeds |
+| Amnesty International | `alt.news.amnesty` | whole news items (CC BY-NC-ND 4.0) |
+| Human Rights Watch | `alt.news.hrw` | whole news items (CC BY-NC-ND 4.0) |
+| Mongabay | `alt.news.mongabay` | the opening of conservation news, with a link |
 | Unseenet help | `unseenet.help` | answers to questions, from the docs, issues and pull requests ([Getting help](https://unseenet.org/help/)) |
 
 The news bots post in channels: only the bot starts threads, and anyone

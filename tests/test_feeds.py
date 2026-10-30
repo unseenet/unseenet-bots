@@ -74,6 +74,32 @@ def test_un_news_summary_link_and_no_pictures():
     assert isinstance(get_source("un-news"), UNNews)
 
 
+NGO = (DATA / "ngo.xml").read_bytes()
+
+
+def test_amnesty_and_hrw_whole_text_without_pictures_or_footer():
+    from unseenet_bots.sources import get_source
+    for name, org in (("amnesty", "Amnesty International"), ("hrw", "Human Rights Watch")):
+        item = get_source(name).fetch_items(NGO)[0]
+        assert "First paragraph." in item.body and "Second paragraph." in item.body
+        assert "Click to expand" not in item.body and "appeared first" not in item.body
+        assert "a.jpg" not in item.body and item.pictures == []
+        assert "CC BY-NC-ND 4.0" in item.body and f"{org} does not endorse" in item.body
+        assert "Published by Example Org on" in item.body
+    # a byline that only repeats the organisation is left out
+    assert "*Published on" in get_source("hrw").fetch_items(NGO.replace(
+        b"Example Org", b"Human Rights Watch"))[0].body
+
+
+def test_mongabay_takes_the_opening_with_byline_and_link():
+    from unseenet_bots.sources import get_source
+    item = get_source("mongabay").fetch_items(NGO)[1]
+    assert item.body.startswith("*By Ana Writer*\n")
+    assert "stops mid…\n" in item.body and "originally published" not in item.body
+    assert "[Read the full article on Mongabay](https://example.org/news/2)" in item.body
+    assert item.pictures == []
+
+
 def test_clip_keeps_whole_paragraphs():
     text = "\n\n".join(f"Paragraph {n} " + "x" * 50 for n in range(10))
     out = clip(text, 200, "MORE")

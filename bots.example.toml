@@ -122,3 +122,44 @@ about = "Stories from UN News, the United Nations' news service: a short summary
 not_affiliated_with = "the United Nations"
 lang = "en"
 links = { web = "https://news.un.org/en/" }
+
+[bots.amnesty]
+source = "amnesty"              # whole news items, CC BY-NC-ND 4.0, no pictures
+group = "alt.news.amnesty@<owner fingerprint>"
+from_name = "Amnesty International (bot)"
+key_file = "~/.config/unseenet-bots/amnesty.key"
+max_per_run = 3
+
+[bots.amnesty.profile]
+about = "News from Amnesty International on human rights around the world."
+not_affiliated_with = "Amnesty International"
+lang = "en"
+links = { web = "https://www.amnesty.org/en/latest/" }
+
+[bots.hrw]
+source = "hrw"                  # whole news items, CC BY-NC-ND 4.0, no pictures
+group = "alt.news.hrw@<owner fingerprint>"
+from_name = "Human Rights Watch (bot)"
+key_file = "~/.config/unseenet-bots/hrw.key"
+max_per_run = 3
+max_per_day = 8
+
+[bots.hrw.profile]
+about = "News from Human Rights Watch: investigations and reports on human rights abuses."
+not_affiliated_with = "Human Rights Watch"
+lang = "en"
+links = { web = "https://www.hrw.org/news" }
+
+[bots.mongabay]
+source = "mongabay"             # the opening and a link
+group = "alt.news.mongabay@<owner fingerprint>"
+from_name = "Mongabay (bot)"
+key_file = "~/.config/unseenet-bots/mongabay.key"
+max_per_run = 2
+max_per_day = 6
+
+[bots.mongabay.profile]
+about = "Conservation and environmental news from Mongabay: the opening of each article, with a link to the rest."
+not_affiliated_with = "Mongabay"
+lang = "en"
+links = { web = "https://news.mongabay.com/" }

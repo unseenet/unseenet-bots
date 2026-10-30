@@ -12,6 +12,9 @@ All notable changes to unseenet-bots are listed here. The format follows
 - **UN News** (#30): source `un-news`, the summary of each UN News story with a link to the
   whole story and a credit line. Never pictures (UN Photo needs written permission for the
   web), so run it with `pictures = "no"`; the UN asks to be told that you carry it.
+- **Amnesty International, Human Rights Watch and Mongabay** (#32): sources `amnesty` and `hrw`
+  (whole news items, CC BY-NC-ND 4.0, without pictures, captions or WordPress footers) and
+  `mongabay` (the feed's opening of each article and a link to the rest).
 
 ## [0.4.0] - 2026-10-30
 
