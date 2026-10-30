@@ -181,3 +181,27 @@ from_name = "Lobsters (bot)"
 key_file = "~/.config/unseenet-bots/lobsters.key"
 max_per_run = 5
 options = { url = "https://lobste.rs/rss", site = "Lobsters" }
+
+[bots.cisa]
+source = "cisa-advisories"      # public domain; joint advisories with foreign agencies as summary
+group = "alt.security.cisa@<owner fingerprint>"
+from_name = "CISA advisories (bot)"
+key_file = "~/.config/unseenet-bots/cisa.key"
+max_per_run = 2
+max_age_hours = 168             # about one a month
+
+[bots.kev]
+source = "cisa-kev"             # one post a day, for the day before
+group = "alt.security.kev@<owner fingerprint>"
+from_name = "CISA KEV catalog (bot)"
+key_file = "~/.config/unseenet-bots/kev.key"
+max_per_run = 2
+
+[bots.owid]
+source = "owid"                 # CC BY 4.0, OWID's own charts only
+group = "alt.news.ourworldindata@<owner fingerprint>"
+from_name = "Our World in Data (bot)"
+key_file = "~/.config/unseenet-bots/owid.key"
+pictures = "check"
+max_per_run = 2
+max_age_hours = 96
