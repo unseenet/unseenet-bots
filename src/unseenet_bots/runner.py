@@ -59,6 +59,7 @@ class Bot:
     order: str = "random"           # archive: "random" or "oldest" first
     every_hours: float = 24         # archive: one item this often
     picture_px: int = 1600          # pictures are scaled down to this (longest side)
+    card_picture: bool = False      # keep the page's own preview picture on its link card
 
 
 PROFILE_FOOTER = ("An automatic channel run by the [Unseenet](https://unseenet.org) project - "
@@ -167,7 +168,8 @@ def load_config(path: Path) -> tuple[dict, list[Bot]]:
                 mode=_mode_rule(name, b.get("mode", "full"), b["source"]),
                 order=_order_rule(name, b.get("order", "random")),
                 every_hours=float(b.get("every_hours", 24)),
-                picture_px=int(b.get("picture_px", MAX_PICTURE_PX))))
+                picture_px=int(b.get("picture_px", MAX_PICTURE_PX)),
+                card_picture=_cards_rule(name, b.get("card_picture", "no"))))
         except KeyError as exc:
             raise SystemExit(f"bot {name}: missing {exc}") from exc
     return defaults, bots
@@ -283,8 +285,10 @@ def core_makes_cards(poster_factory=Poster) -> bool:
 async def item_card(p, bot: Bot, item: Item, out=print):
     """The link card for the item's page (#27, UN-RFC 0059), made over Tor, or None.
     Its picture belongs to the page and has a licence of its own: it stays only where
-    the bot posts what its source vouches for (``pictures = "yes"``) and the item brings
-    no picture of its own; else the card goes without one."""
+    the bot posts what its source vouches for (``pictures = "yes"``) or the operator has
+    chosen to keep the page's own preview picture (``card_picture = "yes"``, the picture
+    the page offers for previews of links to it), and the item brings no picture of its
+    own; else the card goes without one."""
     if not bot.cards or not item.link:
         return None
     try:
@@ -295,7 +299,8 @@ async def item_card(p, bot: Bot, item: Item, out=print):
     if not card.title.strip():
         out(f"{bot.name}: no link card for {item.link}: {card.note or 'no title'}")
         return None
-    if bot.pictures != "yes" or item.pictures or bot.mode == "headlines":
+    keep = (bot.pictures == "yes" or bot.card_picture) and not item.pictures
+    if not keep or bot.mode == "headlines":
         card.picture = None
     if bot.mode == "headlines":
         card.desc = ""                    # the publisher's text: only title, site and icon
@@ -536,7 +541,7 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
             if bot.cards and item.link:
                 out(f"--- {bot.name}: link card for {item.link}"
                     + (" (title, site and icon only)" if bot.mode == "headlines"
-                       else " (with the page's picture)" if bot.pictures == "yes"
+                       else " (with the page's picture)" if (bot.pictures == "yes" or bot.card_picture)
                        and not item.pictures else " (without a picture)"))
         return 0
     key = load_key(key_file=bot.key_file, vault=bot.vault, identity=bot.identity,
