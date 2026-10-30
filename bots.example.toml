@@ -205,3 +205,23 @@ key_file = "~/.config/unseenet-bots/owid.key"
 pictures = "check"
 max_per_run = 2
 max_age_hours = 96
+
+[bots.xkcd]
+source = "xkcd"                 # CC BY-NC 2.5: the comic and its title text
+group = "alt.humor.xkcd@<owner fingerprint>"
+from_name = "xkcd (bot)"
+key_file = "~/.config/unseenet-bots/xkcd.key"
+pictures = "yes"
+max_per_run = 1
+max_age_hours = 96
+
+[bots.peppercarrot]
+source = "peppercarrot"         # CC BY 4.0: one episode from the archive a week, as a thread
+mode = "archive"
+every_hours = 168
+order = "oldest"
+group = "alt.comics.peppercarrot@<owner fingerprint>"
+from_name = "Pepper&Carrot (bot)"
+key_file = "~/.config/unseenet-bots/peppercarrot.key"
+pictures = "yes"
+picture_px = 1000

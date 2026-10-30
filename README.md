@@ -93,6 +93,8 @@ from the web, not over Tor.
 | `cisa-advisories` | CISA's cybersecurity advisories, whole; those written with foreign agencies only as their summary and a link | public domain (US government) |
 | `cisa-kev` | one post a day with the vulnerabilities added to CISA's Known Exploited Vulnerabilities catalog the day before | public domain (US government) |
 | `owid` | Our World in Data's Data Insights, with the chart when it is OWID's own (`pictures = "check"`) | CC BY 4.0 |
+| `xkcd` | xkcd's newest comic with its picture and title text; also from the archive (`mode = "archive"`); needs `pictures = "yes"` | CC BY-NC 2.5 |
+| `peppercarrot` | a Pepper&Carrot episode as a thread (the first post and replies, four pages each), with the episode's credits; best with `mode = "archive"`, `pictures = "yes"` and `picture_px = 1000` | CC BY 4.0 |
 
 Images are left out of every post, because they often have licences of
 their own; each post links to the original. Only items from the last two
@@ -163,6 +165,15 @@ key_file = "~/.config/unseenet-bots/lobsters.key"
 max_per_run = 5
 options = { url = "https://lobste.rs/rss", site = "Lobsters" }
 ```
+
+### From the archive
+
+`mode = "archive"` posts one item from the source's archive every `every_hours`
+(default 24), at random (`order = "random"`, the default) or the oldest first
+(`order = "oldest"`), and starts over when it has posted them all. Each such post
+says it is from the archive and when it was first published. Sources with an archive:
+`xkcd` and `peppercarrot`. `picture_px` scales pictures down (default 1600 px), to
+keep a channel's files within what nodes keep for it (8 MiB, UN-RFC 0017).
 
 ### Link previews
 

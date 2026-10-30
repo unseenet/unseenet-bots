@@ -48,6 +48,7 @@ class Item:
     link: str = ""     # the page the item is from: its link card is made for it (#27)
     site: str = ""     # where it is from, for headlines (#35): "Ars Technica"; else the domain
     discussion: str = ""   # a page where it is discussed (HN, Lobsters), for headlines (#35)
+    follow_ups: list["Item"] = field(default_factory=list)   # replies in its thread (#40)
 
 
 def free_licence(name: str | None) -> bool:
@@ -289,12 +290,19 @@ def _registry() -> dict[str, type]:
     from .feeds import (EFF, Amnesty, GlobalVoices, Headlines, HumanRightsWatch, Mongabay,
                         NasaImageOfTheDay, OurWorldInData, TheConversation, UNNews)
     from .cisa import CisaAdvisories, CisaKev
+    from .comics import PepperCarrot, Xkcd
     from .hackernews import HackerNews
     from .wikipedia import InTheNews, OnThisDay
     return {cls.name: cls for cls in (InTheNews, OnThisDay, GlobalVoices, TheConversation,
                                       EFF, NasaImageOfTheDay, UNNews, Amnesty, HumanRightsWatch,
                                       Mongabay, Headlines, HackerNews, CisaAdvisories, CisaKev,
-                                      OurWorldInData)}
+                                      OurWorldInData, Xkcd, PepperCarrot)}
+
+
+def has_archive(name: str) -> bool:
+    """Whether a source can give items from its archive (#36): ``archive(today)`` with
+    the archive's keys, oldest first, and ``archive_item(key)``."""
+    return hasattr(_registry().get(name), "archive_item")
 
 
 def headlines_only(name: str) -> bool:

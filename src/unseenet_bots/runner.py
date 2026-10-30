@@ -31,7 +31,8 @@ from unseenet.core import crypto
 from unseenet.core.markup import MARKDOWN_TYPE
 from unseenet.core.poster import Poster, PosterError, load_key
 
-from .sources import Item, Picture, free_licence, get_bytes, get_source, headlines_only
+from .sources import (Item, Picture, free_licence, get_bytes, get_source, has_archive,
+                      headlines_only)
 
 KEEP = 1000          # remembered item IDs per bot
 
@@ -54,7 +55,10 @@ class Bot:
     profile: dict = field(default_factory=dict)    # [bots.X.profile]: about, links, lang, picture
     pictures: str = "no"            # "yes", "check" or "no": pictures on posts (#7)
     cards: bool = True              # a link card for the item's page (#27, UN-RFC 0059)
-    mode: str = "full"              # "full", or "headlines": title, link and site only (#35)
+    mode: str = "full"              # "full", "headlines" (#35) or "archive" (#36)
+    order: str = "random"           # archive: "random" or "oldest" first
+    every_hours: float = 24         # archive: one item this often
+    picture_px: int = 1600          # pictures are scaled down to this (longest side)
 
 
 PROFILE_FOOTER = ("An automatic channel run by the [Unseenet](https://unseenet.org) project - "
@@ -160,7 +164,10 @@ def load_config(path: Path) -> tuple[dict, list[Bot]]:
                 profile=b.get("profile", {}),
                 pictures=_pictures_rule(name, b.get("pictures", "no")),
                 cards=_cards_rule(name, b.get("cards", "yes")),
-                mode=_mode_rule(name, b.get("mode", "full"), b["source"])))
+                mode=_mode_rule(name, b.get("mode", "full"), b["source"]),
+                order=_order_rule(name, b.get("order", "random")),
+                every_hours=float(b.get("every_hours", 24)),
+                picture_px=int(b.get("picture_px", MAX_PICTURE_PX))))
         except KeyError as exc:
             raise SystemExit(f"bot {name}: missing {exc}") from exc
     return defaults, bots
@@ -172,16 +179,58 @@ def _pictures_rule(name: str, value) -> str:
     return value
 
 
-MODES = ("full", "headlines")
+MODES = ("full", "headlines", "archive")
 
 
 def _mode_rule(name: str, value, source: str) -> str:
     if value not in MODES:
         raise SystemExit(f"bot {name}: mode is {' or '.join(MODES)}")
+    if value == "archive" and not has_archive(source):
+        raise SystemExit(f"bot {name}: the source {source} has no archive")
     if value != "headlines" and headlines_only(source):
         raise SystemExit(f"bot {name}: the source {source} gives headlines only; "
                          'set mode = "headlines"')
     return value
+
+
+def _order_rule(name: str, value) -> str:
+    if value not in ("random", "oldest"):
+        raise SystemExit(f"bot {name}: order is random or oldest")
+    return value
+
+
+def archive_pick(source, bot: "Bot", state: "State", now: datetime, out=print, rng=None) -> list:
+    """The archive item to post now (#36), as a list of zero or one: none while the
+    last one is younger than ``every_hours``; else one not posted before - at random
+    or the oldest - and when all have been posted, it starts over."""
+    import random
+    last = state.data.get("_archive", {}).get(bot.name)
+    if last and datetime.fromisoformat(last) > now - timedelta(hours=bot.every_hours):
+        out(f"{bot.name}: the last archive post was at {last[:16]}; waiting")
+        return []
+    keys = list(source.archive(now.date()))
+    if not keys:
+        return []
+    posted = state.posted(bot.name)
+    fresh = [k for k in keys if source.archive_id(k) not in posted] or keys
+    candidates = fresh if bot.order == "oldest" else (rng or random).sample(fresh, len(fresh))
+    for key in candidates[:5]:                      # an item can be gone: try a few
+        item = source.archive_item(key)
+        if item is not None:
+            when = item.published
+            note = (f"*From the archive: first published {when:%B} {when.day}, {when:%Y}.*\n\n"
+                    if when else "*From the archive.*\n\n")
+            item.body = note + item.body
+            return [item]
+    return []
+
+
+def _max_age(bot: "Bot") -> float | None:
+    return None if bot.mode == "archive" else bot.max_age_hours
+
+
+def archive_posted(state: "State", bot: "Bot", now: datetime) -> None:
+    state.data.setdefault("_archive", {})[bot.name] = now.isoformat()
 
 
 def headline_item(item: Item) -> Item:
@@ -323,17 +372,19 @@ def language_header(bot: Bot) -> list[tuple[str, str]]:
 
 
 async def post_item(p, bot: Bot, item: Item, files_ok: bool, out=print, fetch=get_bytes,
-                    cards_ok: bool = False):
+                    cards_ok: bool = False, references: list[str] | None = None):
     """Post an item, with the pictures its licence allows when the core can, else a
     link to each with its credit; without them if the group or the node takes none.
-    With ``cards_ok``, a link card for the item's page goes with it (#27)."""
+    With ``cards_ok``, a link card for the item's page goes with it (#27); with
+    ``references``, it is a reply in that thread (#40)."""
+    ref = {"references": references} if references else {}
     card = await item_card(p, bot, item, out) if cards_ok else None
     pics = allowed_pictures(bot, item, out)
     files = []
     if pics and files_ok:
         for pic, _, _ in pics:
             try:
-                octets = scale_down(fetch(pic.url, "image/*"))
+                octets = scale_down(fetch(pic.url, "image/*"), bot.picture_px)
                 files.append((pic.url.rsplit("/", 1)[-1][:100] or "picture", octets, pic.alt))
             except (OSError, ValueError) as exc:
                 out(f"{bot.name}: picture not fetched: {exc}")
@@ -347,7 +398,7 @@ async def post_item(p, bot: Bot, item: Item, files_ok: bool, out=print, fetch=ge
     if files or (card is not None and card.picture is not None):
         try:
             result = await p.post(bot.group, item.subject, body(bool(files)), files=files or None,
-                                  content_type=MARKDOWN_TYPE, extra=language_header(bot),
+                                  content_type=MARKDOWN_TYPE, extra=language_header(bot), **ref,
                                   **({"card": card} if card is not None else {}))
             if result.ok:
                 return result
@@ -360,11 +411,11 @@ async def post_item(p, bot: Bot, item: Item, files_ok: bool, out=print, fetch=ge
     if card is not None:
         try:
             return await p.post(bot.group, item.subject, body(False), content_type=MARKDOWN_TYPE,
-                                extra=language_header(bot), card=card)
+                                extra=language_header(bot), card=card, **ref)
         except PosterError as exc:
             out(f"{bot.name}: link card not posted ({exc}); posting without it")
     return await p.post(bot.group, item.subject, body(False), content_type=MARKDOWN_TYPE,
-                        extra=language_header(bot))
+                        extra=language_header(bot), **ref)
 
 
 def _path(value: str | None) -> str | None:
@@ -462,19 +513,26 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
         out(f"{bot.name}: {bot.max_per_day} posts in the last day already; waiting")
         return 0
     source = get_source(bot.source, **bot.options)
-    items = source.fetch(today)
+    if bot.mode == "archive":
+        items = archive_pick(source, bot, state, now, out)
+        if not items:
+            return 0
+    else:
+        items = source.fetch(today)
     if bot.mode == "headlines":
         items = [h for h in (headline_item(i) for i in items) if h is not None]
     if dry_run:
-        for item in new_items(items, state.posted(bot.name), set(), limit, now, bot.max_age_hours):
+        for item in new_items(items, state.posted(bot.name), set(), limit, now, _max_age(bot)):
             for pic, lic, _ in allowed_pictures(bot, item, out):
                 out(f"--- {bot.name}: picture for {item.subject!r}: {pic.url} ({lic})")
         prof = bot_profile(bot)
         marks = state.data.get("_profiles", {}).get(bot.name, {})
         if prof and marks.get("profile") != _mark(prof):
             out(f"--- {bot.name}: would publish its profile first\n{prof.get('about', '')}")
-        for item in new_items(items, state.posted(bot.name), set(), limit, now, bot.max_age_hours):
+        for item in new_items(items, state.posted(bot.name), set(), limit, now, _max_age(bot)):
             out(f"--- {bot.name} -> {bot.group}\nSubject: {item.subject}\n\n{item.body}")
+            if item.follow_ups:
+                out(f"--- {bot.name}: and {len(item.follow_ups)} more part(s) as replies in its thread")
             if bot.cards and item.link:
                 out(f"--- {bot.name}: link card for {item.link}"
                     + (" (title, site and icon only)" if bot.mode == "headlines"
@@ -490,14 +548,21 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
         recent = {subject for _, subject in await p.recent_threads(bot.group)}
         files_ok = bot.pictures != "no" and core_posts_files(poster_factory)
         cards_ok = bot.cards and core_makes_cards(poster_factory)
-        for item in new_items(items, state.posted(bot.name), recent, limit, now, bot.max_age_hours):
+        for item in new_items(items, state.posted(bot.name), recent if bot.mode != "archive" else set(), limit,
+                              now, _max_age(bot)):
             # Markdown (Item.body), with the pictures its licence allows (#7)
             result = await post_item(p, bot, item, files_ok, out, cards_ok=cards_ok)
             if result.ok:
                 state.mark(bot.name, item.id, result.message_id, now)
+                if bot.mode == "archive":
+                    archive_posted(state, bot, now)
                 state.save()                  # after every post: a crash posts nothing twice
                 posted += 1
                 out(f"{bot.name}: posted {item.subject!r} to {len(result.accepted)} node(s)")
+                for n, part in enumerate(item.follow_ups, 2):    # the rest, in its thread (#40)
+                    more = await post_item(p, bot, part, files_ok, out, references=[result.message_id])
+                    out(f"{bot.name}:   part {n} " + ("posted" if more.ok else
+                        f"NOT posted: {more.refused or more.unreachable}"))
             else:
                 out(f"{bot.name}: NOT posted {item.subject!r}: {result.refused or result.unreachable}")
     return posted
