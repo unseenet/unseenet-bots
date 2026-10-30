@@ -60,9 +60,11 @@ class Bot:
     every_hours: float = 24         # archive: one item this often
     picture_px: int = 1600          # pictures are scaled down to this (longest side)
     card_picture: bool = False      # keep the page's own preview picture on its link card
+    run_by: str | None = None       # who runs it, for the profile's footer (Markdown)
 
 
-PROFILE_FOOTER = ("An automatic channel run by the [Unseenet](https://unseenet.org) project - "
+RUN_BY = "the [Unseenet](https://unseenet.org) project"
+PROFILE_FOOTER = ("An automatic channel run by {run_by} - "
                   "comment below each post.{affiliation} Posts go to [{channel}]({address}).")
 MAX_ABOUT = 2048                  # UN-RFC 0022 section 4.1
 
@@ -84,6 +86,7 @@ def bot_profile(bot: Bot) -> dict | None:
     source = cfg.get("not_affiliated_with")
     about = cfg.get("about", "").strip()
     footer = PROFILE_FOOTER.format(
+        run_by=(bot.run_by or "").strip() or RUN_BY,
         affiliation=f" Not affiliated with {source}." if source else "",
         channel=bot.group.split("@")[0], address=channel_address(bot.group))
     text = (about + "\n\n" + footer) if about else footer
@@ -169,7 +172,8 @@ def load_config(path: Path) -> tuple[dict, list[Bot]]:
                 order=_order_rule(name, b.get("order", "random")),
                 every_hours=float(b.get("every_hours", 24)),
                 picture_px=int(b.get("picture_px", MAX_PICTURE_PX)),
-                card_picture=_cards_rule(name, b.get("card_picture", "no"))))
+                card_picture=_cards_rule(name, b.get("card_picture", "no")),
+                run_by=b.get("run_by", defaults.get("run_by"))))
         except KeyError as exc:
             raise SystemExit(f"bot {name}: missing {exc}") from exc
     return defaults, bots

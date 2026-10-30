@@ -7,6 +7,7 @@
 [defaults]
 state_file = "~/.local/state/unseenet-bots/state.json"
 # nodes = ["xyz.onion"]        # default: Unseenet's list of known nodes
+# run_by = "@yourname"         # who runs the bots, in their profiles; default: the Unseenet project
 # ripen_to = 4                 # `unseenet-bots ripen`: the keys' level (UN-RFC 0025); default
                                # UNSEENET_RIPEN_TO, else 3. 4 takes two to three weeks of one
                                # core, then every post costs about a quarter of the postage

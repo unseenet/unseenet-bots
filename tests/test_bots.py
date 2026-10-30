@@ -102,6 +102,22 @@ def test_a_bot_profile_has_the_mark_the_footer_and_the_links():
     assert bot_profile(Bot(name="x", source="eff", group="g@a", from_name="x")) is None
 
 
+def test_run_by_names_who_runs_the_bot_in_the_footer(tmp_path):
+    from unseenet_bots.runner import bot_profile, load_config
+    assert "run by the [Unseenet](https://unseenet.org) project" in bot_profile(_profiled())["about"]
+    mine = Bot(name="nasa", source="nasa-iotd", group="alt.space.nasa@aaaaaaaaaaaaaaaa",
+               from_name="NASA (bot)", profile={"about": "x"}, run_by="@andlo, privately")
+    about = bot_profile(mine)["about"]
+    assert "An automatic channel run by @andlo, privately - comment below each post." in about
+    assert "Unseenet](https://unseenet.org) project" not in about
+    cfg = tmp_path / "bots.toml"
+    cfg.write_text('[defaults]\nrun_by = "@andlo"\n'
+                   '[bots.a]\nsource = "eff"\ngroup = "g@a"\n'
+                   '[bots.b]\nsource = "eff"\ngroup = "g@a"\nrun_by = "someone else"\n')
+    _, bots = load_config(cfg)
+    assert [b.run_by for b in bots] == ["@andlo", "someone else"]
+
+
 def test_too_long_an_about_is_refused():
     import pytest
     from unseenet_bots.runner import bot_profile

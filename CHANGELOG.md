@@ -7,6 +7,14 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-10-30
+
+### Added
+
+- `run_by` in `[defaults]` or per bot: who runs the bots, in the last line of their
+  profiles ("An automatic channel run by ..."), for bots run by others than the
+  Unseenet project. Without it the line is as before.
+
 ## [0.7.3] - 2026-10-30
 
 ### Changed
