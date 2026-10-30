@@ -305,6 +305,8 @@ async def item_card(p, bot: Bot, item: Item, out=print):
         return None
     keep = (bot.card_picture or (bot.pictures == "yes" and bot.mode != "headlines")) \
         and not item.pictures
+    if keep and card.picture is None and card.note:
+        out(f"{bot.name}: link card without its picture: {card.note}")
     if not keep:
         card.picture = None
     if bot.mode == "headlines":
