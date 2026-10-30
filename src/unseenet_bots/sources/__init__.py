@@ -46,6 +46,8 @@ class Item:
     published: datetime | None = None   # when the source published it (UTC), if known
     pictures: list[Picture] = field(default_factory=list)
     link: str = ""     # the page the item is from: its link card is made for it (#27)
+    site: str = ""     # where it is from, for headlines (#35): "Ars Technica"; else the domain
+    discussion: str = ""   # a page where it is discussed (HN, Lobsters), for headlines (#35)
 
 
 def free_licence(name: str | None) -> bool:
@@ -284,12 +286,19 @@ def clip(markdown: str, limit: int, more: str) -> str:
 
 
 def _registry() -> dict[str, type]:
-    from .feeds import (EFF, Amnesty, GlobalVoices, HumanRightsWatch, Mongabay, NasaImageOfTheDay,
-                        TheConversation, UNNews)
+    from .feeds import (EFF, Amnesty, GlobalVoices, Headlines, HumanRightsWatch, Mongabay,
+                        NasaImageOfTheDay, TheConversation, UNNews)
+    from .hackernews import HackerNews
     from .wikipedia import InTheNews, OnThisDay
     return {cls.name: cls for cls in (InTheNews, OnThisDay, GlobalVoices, TheConversation,
                                       EFF, NasaImageOfTheDay, UNNews, Amnesty, HumanRightsWatch,
-                                      Mongabay)}
+                                      Mongabay, Headlines, HackerNews)}
+
+
+def headlines_only(name: str) -> bool:
+    """Whether a source gives only headlines (#35): such a source runs only in a bot
+    with ``mode = "headlines"``."""
+    return bool(getattr(_registry().get(name), "headlines_only", False))
 
 
 def get_source(name: str, **options) -> Source:

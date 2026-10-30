@@ -88,6 +88,8 @@ from the web, not over Tor.
 | `amnesty` | whole news items from Amnesty International, without pictures | CC BY-NC-ND 4.0 |
 | `hrw` | whole news items from Human Rights Watch, without pictures or captions | CC BY-NC-ND 4.0 |
 | `mongabay` | the feed's opening of each Mongabay article, and a link to the rest; use `max_per_day` | Mongabay's republishing guidelines |
+| `headlines` | any RSS or Atom feed as headlines only (`options = { url, site }`): Lobsters, Ars Technica, The Register, LWN, ProPublica, Rest of World; needs `mode = "headlines"` | headline and link only |
+| `hackernews` | the stories on Hacker News' front page with at least `min_score` points (default 300), with the HN discussion; needs `mode = "headlines"` | headline and link only |
 
 Images are left out of every post, because they often have licences of
 their own; each post links to the original. Only items from the last two
@@ -139,6 +141,25 @@ same credit. `run --dry-run` shows which pictures would go and why. Today the
 NASA and Wikipedia "In the news" sources offer pictures; EFF and Global Voices
 only link to theirs (each picture has its own licence there), and The
 Conversation's are agency pictures, so never.
+
+### Headlines only
+
+For sources whose text and pictures may not be republished, `mode = "headlines"`
+posts only the headline as a link, where it is from, and the discussion when there
+is one (Hacker News, Lobsters, a site's comments): the runner writes the post itself,
+so nothing of the source's text or pictures gets in, and links lose their `utm_*`
+tracking. The link card then keeps only the page's title, site and icon - not its
+description or picture. The `headlines` and `hackernews` sources run only in this mode.
+
+```toml
+[bots.lobsters]
+source = "headlines"
+mode = "headlines"
+group = "alt.news.lobsters@<owner fingerprint>"
+key_file = "~/.config/unseenet-bots/lobsters.key"
+max_per_run = 5
+options = { url = "https://lobste.rs/rss", site = "Lobsters" }
+```
 
 ### Link previews
 

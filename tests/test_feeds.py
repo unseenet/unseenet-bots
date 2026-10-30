@@ -100,6 +100,13 @@ def test_mongabay_takes_the_opening_with_byline_and_link():
     assert item.pictures == []
 
 
+def test_a_bare_ampersand_does_not_break_a_feed():
+    bad = b'<rss><channel><item><title>T</title><link>https://e.org/a?x=1&amp;y=2</link>' \
+          b'<description><img src="p.jpg?w=1&dpr=2"/></description></item></channel></rss>'
+    (e,) = parse_feed(bad)
+    assert (e["title"], e["link"]) == ("T", "https://e.org/a?x=1&y=2")
+
+
 def test_clip_keeps_whole_paragraphs():
     text = "\n\n".join(f"Paragraph {n} " + "x" * 50 for n in range(10))
     out = clip(text, 200, "MORE")
