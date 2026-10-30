@@ -7,6 +7,10 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-30
+
+Needs unseenet 0.6.5 (`unseenet>=0.6.5,<0.7`), as 0.6.0; nodes need no update.
+
 ### Added
 
 - **From the archive** (#36): `mode = "archive"` posts one item from a source's archive
@@ -130,7 +134,8 @@ README's setup step).
 - `contrib/`: systemd units for a user service and for a dedicated `bots`
   user with an hourly timer.
 
-[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/unseenet/unseenet-bots/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/unseenet/unseenet-bots/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/unseenet/unseenet-bots/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/unseenet/unseenet-bots/compare/v0.3.0...v0.4.0
