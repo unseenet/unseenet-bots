@@ -100,3 +100,20 @@ def test_card_keeps_only_title_site_and_icon():
     full = Bot(name="b", source="nasa-iotd", group="g", from_name="b", pictures="yes")
     card = asyncio.run(item_card(P(), full, item, out=lambda m: None))
     assert card.desc == "Their text" and card.picture is not None
+
+
+def test_card_picture_keeps_the_page_preview_only_when_chosen():
+    class Draft:
+        def __init__(self):
+            self.title, self.desc, self.site, self.picture, self.note = "T", "D", "S", object(), ""
+
+    class P:
+        async def make_card(self, url, language="en"):
+            return Draft()
+    item = Item("x", "T", "", link="https://example.org/a")
+    off = Bot(name="b", source="un-news", group="g", from_name="b", pictures="no")
+    on = Bot(name="b", source="un-news", group="g", from_name="b", pictures="no", card_picture=True)
+    assert asyncio.run(item_card(P(), off, item, out=lambda m: None)).picture is None
+    assert asyncio.run(item_card(P(), on, item, out=lambda m: None)).picture is not None
+    head = Bot(name="h", source="headlines", group="g", from_name="h", mode="headlines", card_picture=True)
+    assert asyncio.run(item_card(P(), head, item, out=lambda m: None)).picture is None

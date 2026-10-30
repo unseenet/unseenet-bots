@@ -184,7 +184,10 @@ title and description, made once over Tor when it is posted, so readers fetch
 nothing. The page's own picture goes on the card only where the bot posts
 what its source vouches for (`pictures = "yes"`) and the item brings no
 picture of its own; elsewhere the card goes without it, since the picture has
-a licence of its own. `cards = "no"` on a bot leaves the cards out. A page
+a licence of its own. `card_picture = "yes"` keeps the page's own preview picture (the one it
+offers for previews of links to it, as social networks show) even where the bot posts
+no pictures - an operator's choice, since the copy then lives in the network and
+cannot be taken back. `cards = "no"` on a bot leaves the cards out. A page
 that does not answer over Tor gives no card; the post goes all the same.
 
 ## Develop
