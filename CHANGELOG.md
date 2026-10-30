@@ -7,6 +7,17 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **From the archive** (#36): `mode = "archive"` posts one item from a source's archive
+  every `every_hours`, at random or the oldest first (`order`), and starts over when all
+  are posted; the post says when it was first published.
+- **xkcd and Pepper&Carrot** (#40): `xkcd` (CC BY-NC 2.5) with the comic and its title
+  text, new or from the archive; `peppercarrot` (CC BY 4.0), an episode as a thread - the
+  first post and replies of four pages each - with the episode's credits.
+- An item can have follow-ups posted as replies in its thread; `picture_px` scales a bot's
+  pictures down.
+
 ## [0.6.0] - 2026-10-30
 
 Needs unseenet 0.6.5 (`unseenet>=0.6.5,<0.7`), as 0.5.0; nodes need no update.
