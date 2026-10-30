@@ -14,6 +14,11 @@ All notable changes to unseenet-bots are listed here. The format follows
   picture from the source gets in; the link card keeps only title, site and icon. Sources
   `headlines` (any RSS/Atom feed, `options = { url, site }`) and `hackernews` (the front page
   above `min_score`), which run only in this mode. Links lose their `utm_*` parameters.
+- **CISA** (#37): `cisa-advisories`, the cybersecurity advisories whole (public domain), or
+  only their summary and a link when foreign agencies wrote them too; `cisa-kev`, one post a
+  day with the vulnerabilities added to the KEV catalog the day before.
+- **Our World in Data** (#38): `owid`, the Data Insights under CC BY 4.0, with the chart when
+  its own description says it is OWID's (`pictures = "check"`).
 - Feeds with a bare `&` in an attribute (Rest of World) are read.
 
 ## [0.5.0] - 2026-10-30

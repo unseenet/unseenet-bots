@@ -365,3 +365,48 @@ class Headlines(FeedSource):
                     body="", published=entry["published"], link=_untracked(entry["link"]),
                     site=self.site,
                     discussion=comments if comments.startswith("https://") else "")
+
+
+_IMG = re.compile(r'<img\b[^>]*\bsrc="([^"]+)"[^>]*>', re.I)
+_ALT = re.compile(r'\balt="([^"]*)"', re.I)
+
+
+class OurWorldInData(FeedSource):
+    """Our World in Data's Data Insights: short texts, each with a chart. OWID's
+    writing, charts and data are CC BY 4.0 (https://ourworldindata.org/faq); a chart
+    goes with the post only when its own description says it is CC BY to Our World in
+    Data - charts by others have their own licences and stay links (#38)."""
+
+    name = "owid"
+    url = "https://ourworldindata.org/atom-data-insights.xml"
+
+    def item(self, entry):
+        body = article_markdown(entry["html"], entry["link"])
+        if not body:
+            return None
+        pics = []
+        for tag in re.finditer(r"<img\b[^>]*>", entry["html"], re.I):
+            src, alt = _IMG.search(tag.group(0)), _ALT.search(tag.group(0))
+            alt = unescape(alt.group(1)) if alt else ""
+            if src and "License: CC BY to Our World in Data" in alt:
+                pics.append(Picture(unescape(src.group(1)), alt=clip_alt(alt), page=entry["link"],
+                                    licence="CC BY 4.0", author="Our World in Data"))
+                break                                   # one chart per insight
+        who = f" by {entry['author']}" if entry["author"] else ""
+        lines = [f"*Originally published{who} at [Our World in Data]({entry['link']})"
+                 f"{' on ' + _when(entry) if _when(entry) else ''}. Republished here under a "
+                 "Creative Commons licence.*", "",
+                 clip(body, MAX_BODY, f"*The rest is at [Our World in Data]({entry['link']}).*"),
+                 "", "---",
+                 "From Our World in Data (https://ourworldindata.org), under CC BY 4.0 "
+                 "(https://creativecommons.org/licenses/by/4.0/): converted to plain text and "
+                 "markdown. Our World in Data is not an author of this post or of Unseenet and "
+                 "does not endorse them."]
+        return Item(id="owid:" + entry["id"], subject=_subject(entry["title"]),
+                    body="\n".join(lines) + "\n", published=entry["published"], pictures=pics,
+                    link=entry["link"])
+
+
+def clip_alt(alt: str, limit: int = 600) -> str:
+    alt = " ".join(alt.split())
+    return alt if len(alt) <= limit else alt[: limit - 1].rstrip() + "…"

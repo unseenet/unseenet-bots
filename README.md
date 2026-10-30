@@ -90,6 +90,9 @@ from the web, not over Tor.
 | `mongabay` | the feed's opening of each Mongabay article, and a link to the rest; use `max_per_day` | Mongabay's republishing guidelines |
 | `headlines` | any RSS or Atom feed as headlines only (`options = { url, site }`): Lobsters, Ars Technica, The Register, LWN, ProPublica, Rest of World; needs `mode = "headlines"` | headline and link only |
 | `hackernews` | the stories on Hacker News' front page with at least `min_score` points (default 300), with the HN discussion; needs `mode = "headlines"` | headline and link only |
+| `cisa-advisories` | CISA's cybersecurity advisories, whole; those written with foreign agencies only as their summary and a link | public domain (US government) |
+| `cisa-kev` | one post a day with the vulnerabilities added to CISA's Known Exploited Vulnerabilities catalog the day before | public domain (US government) |
+| `owid` | Our World in Data's Data Insights, with the chart when it is OWID's own (`pictures = "check"`) | CC BY 4.0 |
 
 Images are left out of every post, because they often have licences of
 their own; each post links to the original. Only items from the last two
@@ -138,7 +141,7 @@ its licence and its page. Big pictures are scaled down to 1600 px; the core
 takes their metadata out. If the core cannot post files (before unseenet
 0.5), or the group or node takes none, the post links to the picture with the
 same credit. `run --dry-run` shows which pictures would go and why. Today the
-NASA and Wikipedia "In the news" sources offer pictures; EFF and Global Voices
+NASA, Our World in Data and Wikipedia "In the news" sources offer pictures; EFF and Global Voices
 only link to theirs (each picture has its own licence there), and The
 Conversation's are agency pictures, so never.
 
