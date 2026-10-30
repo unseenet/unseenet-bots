@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Example headlines</title>
+<item><title>A federated forge</title><link>https://tangled.example/forge</link>
+<guid isPermaLink="false">https://lobste.rs/s/abc</guid>
+<pubDate>Sun, 18 Oct 2026 08:00:00 +0000</pubDate>
+<comments>https://lobste.rs/s/abc/forge</comments>
+<description>&lt;p&gt;The publisher's text, never posted.&lt;/p&gt;</description></item>
+<item><title> </title><link>https://example.org/empty</link><guid>e</guid></item>
+</channel></rss>

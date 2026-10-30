@@ -31,7 +31,7 @@ from unseenet.core import crypto
 from unseenet.core.markup import MARKDOWN_TYPE
 from unseenet.core.poster import Poster, PosterError, load_key
 
-from .sources import Item, Picture, free_licence, get_bytes, get_source
+from .sources import Item, Picture, free_licence, get_bytes, get_source, headlines_only
 
 KEEP = 1000          # remembered item IDs per bot
 
@@ -54,6 +54,7 @@ class Bot:
     profile: dict = field(default_factory=dict)    # [bots.X.profile]: about, links, lang, picture
     pictures: str = "no"            # "yes", "check" or "no": pictures on posts (#7)
     cards: bool = True              # a link card for the item's page (#27, UN-RFC 0059)
+    mode: str = "full"              # "full", or "headlines": title, link and site only (#35)
 
 
 PROFILE_FOOTER = ("An automatic channel run by the [Unseenet](https://unseenet.org) project - "
@@ -158,7 +159,8 @@ def load_config(path: Path) -> tuple[dict, list[Bot]]:
                 nodes=b.get("nodes", defaults.get("nodes")),
                 profile=b.get("profile", {}),
                 pictures=_pictures_rule(name, b.get("pictures", "no")),
-                cards=_cards_rule(name, b.get("cards", "yes"))))
+                cards=_cards_rule(name, b.get("cards", "yes")),
+                mode=_mode_rule(name, b.get("mode", "full"), b["source"])))
         except KeyError as exc:
             raise SystemExit(f"bot {name}: missing {exc}") from exc
     return defaults, bots
@@ -168,6 +170,40 @@ def _pictures_rule(name: str, value) -> str:
     if value not in ("yes", "check", "no"):
         raise SystemExit(f"bot {name}: pictures is yes, check or no")
     return value
+
+
+MODES = ("full", "headlines")
+
+
+def _mode_rule(name: str, value, source: str) -> str:
+    if value not in MODES:
+        raise SystemExit(f"bot {name}: mode is {' or '.join(MODES)}")
+    if value != "headlines" and headlines_only(source):
+        raise SystemExit(f"bot {name}: the source {source} gives headlines only; "
+                         'set mode = "headlines"')
+    return value
+
+
+def headline_item(item: Item) -> Item:
+    """An item as a headline (#35): the title as a link, where it is from, and the
+    discussion when there is one - the runner writes the body, so no text or picture
+    from the source can get in."""
+    from urllib.parse import urlsplit
+    if not item.link:
+        return None
+    def host(url):
+        return urlsplit(url).netloc.removeprefix("www.")
+    site, tail = item.site or host(item.link), ""
+    if item.discussion and item.discussion != item.link:
+        if host(item.discussion) != host(item.link):      # an aggregator: HN, Lobsters
+            via = item.site or host(item.discussion)
+            site, tail = host(item.link), f" · [Discussion on {via}]({item.discussion})"
+        else:
+            tail = f" · [Comments]({item.discussion})"
+    title = item.subject.replace("[", "\\[").replace("]", "\\]")
+    return Item(id=item.id, subject=item.subject, published=item.published, link=item.link,
+                site=site, discussion=item.discussion,
+                body=f"**[{title}]({item.link})**\n\n*{site}*{tail}\n")
 
 
 def _cards_rule(name: str, value) -> bool:
@@ -210,8 +246,10 @@ async def item_card(p, bot: Bot, item: Item, out=print):
     if not card.title.strip():
         out(f"{bot.name}: no link card for {item.link}: {card.note or 'no title'}")
         return None
-    if bot.pictures != "yes" or item.pictures:
+    if bot.pictures != "yes" or item.pictures or bot.mode == "headlines":
         card.picture = None
+    if bot.mode == "headlines":
+        card.desc = ""                    # the publisher's text: only title, site and icon
     return card
 
 
@@ -425,6 +463,8 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
         return 0
     source = get_source(bot.source, **bot.options)
     items = source.fetch(today)
+    if bot.mode == "headlines":
+        items = [h for h in (headline_item(i) for i in items) if h is not None]
     if dry_run:
         for item in new_items(items, state.posted(bot.name), set(), limit, now, bot.max_age_hours):
             for pic, lic, _ in allowed_pictures(bot, item, out):
@@ -437,8 +477,9 @@ async def run_bot(bot: Bot, state: State, dry_run: bool = False, today=None,
             out(f"--- {bot.name} -> {bot.group}\nSubject: {item.subject}\n\n{item.body}")
             if bot.cards and item.link:
                 out(f"--- {bot.name}: link card for {item.link}"
-                    + (" (with the page's picture)" if bot.pictures == "yes" and not item.pictures
-                       else " (without a picture)"))
+                    + (" (title, site and icon only)" if bot.mode == "headlines"
+                       else " (with the page's picture)" if bot.pictures == "yes"
+                       and not item.pictures else " (without a picture)"))
         return 0
     key = load_key(key_file=bot.key_file, vault=bot.vault, identity=bot.identity,
                    seed_env=bot.seed_env)

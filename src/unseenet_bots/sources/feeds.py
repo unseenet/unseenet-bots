@@ -22,6 +22,7 @@ to the original, and NASA's picture is linked.
 
 from __future__ import annotations
 
+import re
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -63,7 +64,11 @@ def _text(el, path: str) -> str:
 def parse_feed(data: bytes) -> list[dict]:
     """Entries of an RSS 2.0 or Atom feed, oldest first, as plain dicts:
     id, title, link, author, published, html (the fullest text there is), summary."""
-    root = ET.fromstring(data)
+    try:
+        root = ET.fromstring(data)
+    except ET.ParseError:
+        # some feeds (Rest of World) put a bare "&" in an attribute; escape those and retry
+        root = ET.fromstring(re.sub(rb"&(?!#?[A-Za-z0-9]+;)", b"&amp;", data))
     entries = []
     if root.tag == ATOM + "feed":
         for e in root.findall(ATOM + "entry"):
@@ -82,6 +87,7 @@ def parse_feed(data: bytes) -> list[dict]:
                             "author": _text(e, DC_CREATOR), "published": _date(_text(e, "pubDate")),
                             "html": _text(e, CONTENT) or _text(e, "description"),
                             "summary": _text(e, "description"), "rights": "",
+                            "comments": _text(e, "comments"),
                             "image": (e.find("enclosure").get("url", "")
                                       if e.find("enclosure") is not None else "")})
     entries.sort(key=lambda x: x["published"] or datetime.min.replace(tzinfo=timezone.utc))
@@ -323,3 +329,39 @@ class Mongabay(FeedSource):
             "except as plain text. Mongabay does not endorse this post or Unseenet."]
         return Item(id="mongabay:" + entry["id"], subject=_subject(entry["title"]),
                     body="\n".join(lines) + "\n", published=entry["published"], link=entry["link"])
+
+
+
+def _untracked(url: str) -> str:
+    """A link without its ``utm_*`` tracking parameters."""
+    from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+    parts = urlsplit(url)
+    query = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True)
+             if not k.lower().startswith("utm_")]
+    return urlunsplit(parts._replace(query=urlencode(query)))
+
+
+class Headlines(FeedSource):
+    """Any RSS or Atom feed, as headlines only (#35): the title, the link, the site and
+    the feed's discussion link (Lobsters' ``<comments>``) - never its text or pictures,
+    for sources whose terms allow no republishing (ProPublica, Rest of World, Ars
+    Technica, The Register, LWN, Lobsters). Runs only with ``mode = "headlines"``.
+    ``options = { url = "...", site = "Ars Technica" }``."""
+
+    name = "headlines"
+    headlines_only = True
+
+    def __init__(self, url: str | None = None, site: str = "", fetch=get_bytes):
+        if not (url or self.url):
+            raise ValueError("the headlines source needs options.url, the feed's address")
+        super().__init__(url, fetch)
+        self.site = site
+
+    def item(self, entry):
+        if not entry["link"] or not entry["title"].strip():
+            return None
+        comments = entry.get("comments", "")
+        return Item(id="hl:" + (entry["id"] or entry["link"]), subject=_subject(entry["title"]),
+                    body="", published=entry["published"], link=_untracked(entry["link"]),
+                    site=self.site,
+                    discussion=comments if comments.startswith("https://") else "")

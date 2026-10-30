@@ -163,3 +163,21 @@ about = "Conservation and environmental news from Mongabay: the opening of each 
 not_affiliated_with = "Mongabay"
 lang = "en"
 links = { web = "https://news.mongabay.com/" }
+
+[bots.hackernews]
+source = "hackernews"           # headlines only: the front page above min_score
+mode = "headlines"
+group = "alt.news.hackernews@<owner fingerprint>"
+from_name = "Hacker News front page (bot)"
+key_file = "~/.config/unseenet-bots/hackernews.key"
+max_per_run = 5
+options = { min_score = 300 }
+
+[bots.lobsters]
+source = "headlines"            # any feed, headlines only
+mode = "headlines"
+group = "alt.news.lobsters@<owner fingerprint>"
+from_name = "Lobsters (bot)"
+key_file = "~/.config/unseenet-bots/lobsters.key"
+max_per_run = 5
+options = { url = "https://lobste.rs/rss", site = "Lobsters" }

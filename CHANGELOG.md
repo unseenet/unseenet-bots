@@ -7,6 +7,15 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Headlines only** (#35): `mode = "headlines"` posts the headline as a link, where it is
+  from and the discussion (HN, Lobsters, comments) - written by the runner, so no text or
+  picture from the source gets in; the link card keeps only title, site and icon. Sources
+  `headlines` (any RSS/Atom feed, `options = { url, site }`) and `hackernews` (the front page
+  above `min_score`), which run only in this mode. Links lose their `utm_*` parameters.
+- Feeds with a bare `&` in an attribute (Rest of World) are read.
+
 ## [0.5.0] - 2026-10-30
 
 Needs unseenet 0.6.5 (`unseenet>=0.6.5,<0.7`), as 0.4.0; nodes need no update.
