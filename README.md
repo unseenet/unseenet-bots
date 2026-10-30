@@ -124,7 +124,10 @@ picture_alt = "..."
 
 Every About ends with the same line: an automatic channel run by the
 Unseenet project, comment below each post, not affiliated with the source,
-and a link to the channel. `unseenet-bots profile --dry-run` shows the
+and a link to the channel. If you run bots yourself, not for the project, say
+who runs them with `run_by` in `[defaults]` or per bot (Markdown, e.g.
+`run_by = "@andlo, privately"`); the line then reads *run by @andlo, privately*.
+`unseenet-bots profile --dry-run` shows the
 profiles; `unseenet-bots profile` publishes them now, without posting. Use
 no source's logo as the picture (trademarks).
 
