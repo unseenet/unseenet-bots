@@ -107,3 +107,18 @@ lang = "en"
 links = { web = "https://www.nasa.gov/image-of-the-day/" }
 # picture = "~/.config/unseenet-bots/nasa.webp"   # 128 px WebP, no metadata
 # picture_alt = "..."
+
+[bots.un]
+source = "un-news"              # the summary and a link; tell the UN you carry it
+group = "alt.news.un@<owner fingerprint>"
+from_name = "UN News (bot)"
+key_file = "~/.config/unseenet-bots/un.key"
+pictures = "no"                 # UN Photo needs written permission for the web
+max_per_run = 5
+# options = { url = "https://news.un.org/feed/subscribe/en/news/topic/climate-change/feed/rss.xml" }
+
+[bots.un.profile]       # the public profile, with the bot mark (draft text)
+about = "Stories from UN News, the United Nations' news service: a short summary of each, with a link to the whole story."
+not_affiliated_with = "the United Nations"
+lang = "en"
+links = { web = "https://news.un.org/en/" }
