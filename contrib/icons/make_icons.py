@@ -171,4 +171,49 @@ for name, letter, bg, accent in (("hackernews", "HN", (70, 70, 70), (120, 120, 1
                                  ("restofworld", "W", (90, 70, 60), (140, 110, 95))):
     im, d = canvas(bg); newspaper(d, letter, accent)
     save(name, im, f"A plain newspaper page with the letters {letter} in its masthead")
+def bubble(d):
+    d.rounded_rectangle((90, 110, 422, 330), radius=60, fill=W)
+    d.polygon([(170, 320), (150, 410), (250, 325)], fill=W)
+    for x in (180, 256, 332):
+        d.ellipse((x - 22, 198, x + 22, 242), fill=(70, 70, 70))
+
+
+def book(d, col):
+    d.polygon([(256, 160), (100, 120), (100, 380), (256, 420)], fill=W)
+    d.polygon([(256, 160), (412, 120), (412, 380), (256, 420)], fill=(235, 235, 235))
+    d.line((256, 160, 256, 420), fill=col, width=10)
+    for y in (180, 220, 260, 300):
+        d.line((130, y, 230, y + 24), fill=(170, 170, 170), width=8)
+        d.line((282, y + 24, 382, y), fill=(170, 170, 170), width=8)
+
+
+def padlock(d):
+    d.arc((166, 90, 346, 290), 180, 360, fill=W, width=34)
+    d.line((183, 190, 183, 250), fill=W, width=34)
+    d.line((329, 190, 329, 250), fill=W, width=34)
+    d.rounded_rectangle((130, 230, 382, 430), radius=26, fill=W)
+    d.ellipse((236, 300, 276, 340), fill=(110, 40, 40))
+    d.rectangle((248, 320, 264, 380), fill=(110, 40, 40))
+
+
+def network(d):
+    pts = [(256, 130), (140, 230), (372, 230), (190, 380), (322, 380), (256, 260)]
+    for a in pts:
+        for b in pts:
+            if a < b and abs(a[0] - b[0]) + abs(a[1] - b[1]) < 260:
+                d.line((a, b), fill=W, width=10)
+    for x, y in pts:
+        d.ellipse((x - 30, y - 30, x + 30, y + 30), fill=W)
+
+
+im, d = canvas((60, 90, 130)); bubble(d)
+save("xkcd", im, "A white speech bubble with three dots on blue")
+im, d = canvas((150, 80, 60)); book(d, (150, 80, 60))
+save("peppercarrot", im, "An open book on warm red")
+im, d = canvas((110, 40, 40)); padlock(d)
+save("arxiv-cr", im, "A white padlock on dark red")
+im, d = canvas((40, 60, 90)); network(d)
+save("arxiv-ai", im, "White dots joined by lines, like a small network, on dark blue")
+im, d = canvas((50, 70, 110)); newspaper(d, "F", (90, 110, 160))
+save("fedoramagazine", im, "A plain newspaper page with the letter F in its masthead")
 print(sorted(p.name for p in OUT.glob("*.webp")))
