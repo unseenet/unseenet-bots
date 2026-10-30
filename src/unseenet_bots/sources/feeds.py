@@ -130,7 +130,7 @@ class GlobalVoices(FeedSource):
                   + ". This post is under the same licence.")
         return Item(id="gv:" + entry["id"], subject=_subject(entry["title"]),
                     body=f"{top}\n\n{clip(body, MAX_BODY, more)}\n\n---\n{credit}\n",
-                    published=entry["published"])
+                    published=entry["published"], link=entry["link"])
 
 
 class TheConversation(FeedSource):
@@ -157,7 +157,7 @@ class TheConversation(FeedSource):
                  "(https://creativecommons.org/licenses/by-nd/4.0/): the opening paragraphs, "
                  "unchanged except as plain text."]
         return Item(id="tc:" + entry["id"], subject=_subject(entry["title"]),
-                    body="\n".join(lines) + "\n", published=entry["published"])
+                    body="\n".join(lines) + "\n", published=entry["published"], link=entry["link"])
 
 
 class EFF(FeedSource):
@@ -183,7 +183,7 @@ class EFF(FeedSource):
                  "(https://creativecommons.org/licenses/by/4.0/). Changes: converted to plain text "
                  "and markdown, images left out. This post is under the same licence."]
         return Item(id="eff:" + entry["id"], subject=_subject(entry["title"]),
-                    body="\n".join(lines) + "\n", published=entry["published"])
+                    body="\n".join(lines) + "\n", published=entry["published"], link=entry["link"])
 
 
 class NasaImageOfTheDay(FeedSource):
@@ -207,4 +207,5 @@ class NasaImageOfTheDay(FeedSource):
         pics = [Picture(entry["image"], alt=html_to_text(entry["title"]), page=entry["link"],
                         licence="Public domain", author="NASA")] if entry.get("image") else []
         return Item(id="nasa:" + entry["id"], subject=_subject(entry["title"]),
-                    body="\n".join(lines) + "\n", published=entry["published"], pictures=pics)
+                    body="\n".join(lines) + "\n", published=entry["published"], pictures=pics,
+                    link=entry["link"])

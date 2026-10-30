@@ -103,6 +103,23 @@ little more postage (UN-RFC 0027 section 4.5).
 A node that carries no files refuses the post (`refused`); the project's
 own nodes carry them.
 
+### Link previews
+
+`p.make_card(url)` makes a link card (UN-RFC 0059) over the bot's Tor, as a
+client does: the page's title, description, site name, icon and picture.
+`p.post(..., card=card)` sends it with the post; its link must be in the
+text. Change or drop what you like first - above all the picture, which
+belongs to the page and has a licence of its own:
+
+```python
+card = await p.make_card(url)
+card.picture = None                      # its licence is not known
+result = await p.post(GROUP, subject, f"... [the article]({url})", card=card)
+```
+
+The picture goes as one more file where the group takes files; elsewhere
+the card goes without it.
+
 The result says which nodes took it (`accepted`), which refused it and
 why (`refused`), and which could not be reached (`unreachable`).
 

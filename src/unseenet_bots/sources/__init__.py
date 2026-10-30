@@ -45,6 +45,7 @@ class Item:
     body: str          # markdown, ending with the credit line
     published: datetime | None = None   # when the source published it (UTC), if known
     pictures: list[Picture] = field(default_factory=list)
+    link: str = ""     # the page the item is from: its link card is made for it (#27)
 
 
 def free_licence(name: str | None) -> bool:
