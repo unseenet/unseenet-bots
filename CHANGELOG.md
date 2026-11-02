@@ -7,6 +7,10 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-02
+
+On core 0.7. Needs unseenet 0.7 (`unseenet>=0.7,<0.8`): update the nodes first.
+
 ### Changed
 
 - Runs on core 0.7 (`unseenet>=0.7,<0.8`): announced nodes, councils and servers that update themselves.
@@ -182,7 +186,8 @@ README's setup step).
 - `contrib/`: systemd units for a user service and for a dedicated `bots`
   user with an hourly timer.
 
-[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.7.3...HEAD
+[Unreleased]: https://github.com/unseenet/unseenet-bots/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/unseenet/unseenet-bots/compare/v0.7.5...v0.8.0
 [0.7.3]: https://github.com/unseenet/unseenet-bots/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/unseenet/unseenet-bots/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/unseenet/unseenet-bots/compare/v0.7.0...v0.7.1
