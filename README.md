@@ -72,7 +72,11 @@ in the background, about 2.5-4 days on one core at low priority.
 Each `run` fetches every source once and posts what has not been posted
 before (remembered in a state file, and checked against the channel's
 newest threads). Schedule it, e.g. every hour, with the systemd units in
-`contrib/`. It starts its own Tor, or uses a running one if
+`contrib/`. `contrib/system/unseenet-bots-update.service` and `.timer` keep it up
+to date by itself (unseenet/unseenet#827): the newest release the project key
+signed, checked against its hashes, never an older one, and back to the one
+before if it does not load. They need a core with `unseenet-service-update
+--package` (0.8 or newer). It starts its own Tor, or uses a running one if
 `UNSEENET_TOR_SOCKS` names its SOCKS port. Sources are fetched directly
 from the web, not over Tor.
 
