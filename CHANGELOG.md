@@ -7,6 +7,10 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Runs on core 0.7 (`unseenet>=0.7,<0.8`): announced nodes, councils and servers that update themselves.
+
 ## [0.7.5] - 2026-10-31
 
 ### Changed
