@@ -7,6 +7,14 @@ All notable changes to unseenet-bots are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **The bots can update themselves** (unseenet/unseenet#827, UN-RFC 0062 section 6.1): each
+  release carries its server requirements and `SHA256SUMS.txt`, and
+  `contrib/system/unseenet-bots-update.service` and `.timer` update to the newest release the
+  project key signed (with a core that has `unseenet-service-update --package`, 0.8 or newer).
+  Nothing is restarted: the bots' own timer runs the new version next time.
+
 ## [0.8.0] - 2026-11-02
 
 On core 0.7. Needs unseenet 0.7 (`unseenet>=0.7,<0.8`): update the nodes first.
